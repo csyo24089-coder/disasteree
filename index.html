@@ -473,95 +473,55 @@
             alert('【シミュレーション発動】\n震度5強を検知したため、自動的に避難所ルートを検索・表示しました。');
         }
         
-// 🌤️ 地域名から緯度・経度を取得して天気を更新する関数
+// 🌤️ 地域名から緯度・経度を取得して天気を更新する関数（改善版）
 async function searchWeatherByRegion() {
-    const regionInput = document.getElementById('weatherRegionInput').value;
-    if (!regionInput.trim()) {
+    const regionInput = document.getElementById('weatherRegionInput').value.trim();
+    if (!regionInput) {
         alert('地域名を入力してください。');
         return;
     }
 
-    // Open-MeteoのジオコーディングAPIを使用して地名を検索
-    const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(regionInput)}&count=1&language=ja&format=json`;
+    // 内部関数：APIを叩く処理をまとめる
+    const fetchGeoData = async (searchQuery) => {
+        const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchQuery)}&count=1&language=ja&format=json`;
+        const response = await fetch(geoUrl);
+        return await response.json();
+    };
 
     try {
-        const response = await fetch(geoUrl);
-        const data = await response.json();
+        // 1. まずはユーザーの入力通りに検索
+        let data = await fetchGeoData(regionInput);
 
-        // 検索結果が見つかった場合
+        // 2. 見つからなかった場合「県」をつけて再検索（例: 千葉 → 千葉県）
+        if (!data.results || data.results.length === 0) {
+            console.log(`「${regionInput}」で見つからないため、「県」を追加して再検索します...`);
+            data = await fetchGeoData(regionInput + "県");
+        }
+
+        // 3. それでも見つからなかった場合「市」をつけて再検索（例: 船橋 → 船橋市）
+        if (!data.results || data.results.length === 0) {
+            console.log(`「${regionInput}県」でも見つからないため、「市」を追加して再検索します...`);
+            data = await fetchGeoData(regionInput + "市");
+        }
+
+        // 最終判定：データが見つかったか
         if (data.results && data.results.length > 0) {
             const location = data.results[0];
             const lat = location.latitude;
             const lon = location.longitude;
-            const regionName = location.name; // APIが返してきた正式な地名
+            // APIが返した正式名称（Chiba Prefectureなどの場合があるため、表示はユーザー入力値を優先）
+            const displayName = location.name.match(/^[a-zA-Z]/) ? regionInput : location.name; 
 
             // 新しい座標と地名で天気予報を取得し直す
-            fetchWeatherData(lat, lon, regionName);
+            fetchWeatherData(lat, lon, displayName);
         } else {
-            alert('指定された地域が見つかりませんでした。別の地名でお試しください。');
+            alert('指定された地域が見つかりませんでした。「千葉県」や「那覇市」のように都道府県や市区町村をつけてお試しください。');
         }
     } catch (error) {
         console.error('地域検索に失敗しました:', error);
         alert('地域検索エラーが発生しました。');
     }
 }
-
-// 🌤️ 2週間天気予報データを取得して表示する関数（引数を受け取れるように変更）
-// 初期値として、引数がない場合は東京の座標を設定
-async function fetchWeatherData(lat = 35.6812, lon = 139.7671, regionName = "東京") {
-    
-    // タイトルの地域名表示を更新
-    document.getElementById('current-region').innerText = `（${regionName}）`;
-
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo&forecast_days=14`;
-
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-
-        const grid = document.querySelector('.weather-grid');
-        grid.innerHTML = ''; 
-
-        const getWeatherEmoji = (code) => {
-            if (code === 0 || code === 1) return '☀️'; 
-            if (code === 2 || code === 3) return '☁️'; 
-            if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return '☔'; 
-            if ((code >= 71 && code <= 77) || code >= 85) return '⛄'; 
-            if (code >= 95) return '⚡'; 
-            return '❓';
-        };
-
-        const formatDate = (dateString, index) => {
-            if (index === 0) return '今日';
-            if (index === 1) return '明日';
-            const d = new Date(dateString);
-            return `${d.getMonth() + 1}/${d.getDate()}`;
-        };
-
-        for (let i = 0; i < data.daily.time.length; i++) {
-            const dateStr = data.daily.time[i];
-            const maxTemp = Math.round(data.daily.temperature_2m_max[i]); 
-            const minTemp = Math.round(data.daily.temperature_2m_min[i]);
-            const weatherCode = data.daily.weathercode[i];
-
-            const itemHtml = `
-                <div class="weather-item">
-                    <div class="weather-date">${formatDate(dateStr, i)}</div>
-                    <div class="weather-icon">${getWeatherEmoji(weatherCode)}</div>
-                    <div class="temp-max">${maxTemp}°</div>
-                    <div class="temp-min">${minTemp}°</div>
-                </div>
-            `;
-            grid.insertAdjacentHTML('beforeend', itemHtml);
-        }
-    } catch (error) {
-        console.error('天気データの取得に失敗しました:', error);
-        document.querySelector('.weather-grid').innerHTML = '<p style="padding: 10px;">データの取得に失敗しました。</p>';
-    }
-}
-
-// ページ読み込み時に初期データ（東京）を表示
-document.addEventListener('DOMContentLoaded', () => fetchWeatherData());
     </script>
 </body>
 </html>
