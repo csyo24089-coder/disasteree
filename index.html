@@ -577,8 +577,8 @@ async function fetchWeatherData(lat = 35.6812, lon = 139.7671, regionName = "東
 }
 
         // 🚨 最新の地震情報を取得して表示する関数
+// 🚨 最新の地震情報を取得して表示する関数
 async function fetchEarthquakeData() {
-    // P2P地震情報のAPI（最新の地震情報を1件取得）
     const url = 'https://api.p2pquake.net/v2/history?codes=551&limit=1';
 
     try {
@@ -586,15 +586,14 @@ async function fetchEarthquakeData() {
         const data = await response.json();
 
         if (data && data.length > 0) {
-            // APIから必要なデータを抽出
+            // データが存在する場合の処理
             const eqInfo = data[0].earthquake;
             const timeStr = eqInfo.time; 
             const epicenter = eqInfo.hypocenter.name; 
             const magnitude = eqInfo.hypocenter.magnitude; 
             const maxScaleCode = eqInfo.maxScale; 
-            const domesticTsunami = data[0].issue.tsunami; // 津波の有無
+            const domesticTsunami = data[0].issue.tsunami;
 
-            // 1. 震度コード（10, 20...50など）を日本でおなじみの震度表記（1, 2...5強など）に変換
             const getShindoText = (scaleCode) => {
                 const scaleMap = {
                     10: '1', 20: '2', 30: '3', 40: '4',
@@ -604,11 +603,9 @@ async function fetchEarthquakeData() {
             };
             const shindoText = getShindoText(maxScaleCode);
 
-            // 2. 日時を分かりやすくフォーマット
             const d = new Date(timeStr);
             const formattedTime = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}頃`;
 
-            // 3. 津波情報の判定と色分け
             let tsunamiText = "津波情報の調査中";
             let tsunamiColor = "var(--text-color)";
             if (domesticTsunami === "None") {
@@ -619,27 +616,36 @@ async function fetchEarthquakeData() {
                 tsunamiColor = "var(--danger-color)";
             }
 
-            // 4. HTMLにデータを書き込む
             document.getElementById('display-shindo').innerText = shindoText;
             document.getElementById('eq-time').innerText = formattedTime;
             document.getElementById('eq-epicenter').innerText = epicenter || "調査中";
-            // マグニチュードが-1（不明）の場合は表示を切り替え
             document.getElementById('eq-magnitude').innerText = magnitude !== -1 ? `M${magnitude}` : "調査中";
             
             const tsunamiElement = document.getElementById('eq-tsunami');
             tsunamiElement.innerText = tsunamiText;
             tsunamiElement.style.color = tsunamiColor;
 
-            // 💡【要件定義の実装】震度5弱以上（コード45以上）の場合、自動でルート案内（緊急モード）を起動
             if (maxScaleCode >= 45) {
                 console.log("震度5弱以上を検知しました。緊急モードを起動します。");
-                // 実際に起きた時は以下の関数が発動します（今はテストボタンと同じ動作）
-                // simulateEmergency(); 
             }
+        } else {
+            // 💡 データが空（地震情報がない）場合の処理を追加
+            document.getElementById('display-shindo').innerText = "-";
+            document.getElementById('eq-time').innerText = "現在地震は発生していません";
+            document.getElementById('eq-epicenter').innerText = "-";
+            document.getElementById('eq-magnitude').innerText = "-";
+            
+            const tsunamiElement = document.getElementById('eq-tsunami');
+            tsunamiElement.innerText = "津波の心配はありません。";
+            tsunamiElement.style.color = "var(--text-light)";
         }
     } catch (error) {
         console.error('地震情報の取得に失敗しました:', error);
-        document.getElementById('eq-epicenter').innerText = "データ取得エラー";
+        // エラー時もユーザーが不安にならない表記に変更
+        document.getElementById('display-shindo').innerText = "-";
+        document.getElementById('eq-time').innerText = "情報取得エラー";
+        document.getElementById('eq-epicenter').innerText = "-";
+        document.getElementById('eq-magnitude').innerText = "-";
     }
 }
         
