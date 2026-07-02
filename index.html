@@ -522,6 +522,62 @@ async function searchWeatherByRegion() {
         alert('地域検索エラーが発生しました。');
     }
 }
+// 🌤️ 2週間天気予報データを取得して表示する関数（引数を受け取れるように変更）
+// 初期値として、引数がない場合は東京の座標を設定
+async function fetchWeatherData(lat = 35.6812, lon = 139.7671, regionName = "東京") {
+    
+    // タイトルの地域名表示を更新
+    document.getElementById('current-region').innerText = `（${regionName}）`;
+
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo&forecast_days=14`;
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        const grid = document.querySelector('.weather-grid');
+        grid.innerHTML = ''; 
+
+        const getWeatherEmoji = (code) => {
+            if (code === 0 || code === 1) return '☀️'; 
+            if (code === 2 || code === 3) return '☁️'; 
+            if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return '☔'; 
+            if ((code >= 71 && code <= 77) || code >= 85) return '⛄'; 
+            if (code >= 95) return '⚡'; 
+            return '❓';
+        };
+
+        const formatDate = (dateString, index) => {
+            if (index === 0) return '今日';
+            if (index === 1) return '明日';
+            const d = new Date(dateString);
+            return `${d.getMonth() + 1}/${d.getDate()}`;
+        };
+
+        for (let i = 0; i < data.daily.time.length; i++) {
+            const dateStr = data.daily.time[i];
+            const maxTemp = Math.round(data.daily.temperature_2m_max[i]); 
+            const minTemp = Math.round(data.daily.temperature_2m_min[i]);
+            const weatherCode = data.daily.weathercode[i];
+
+            const itemHtml = `
+                <div class="weather-item">
+                    <div class="weather-date">${formatDate(dateStr, i)}</div>
+                    <div class="weather-icon">${getWeatherEmoji(weatherCode)}</div>
+                    <div class="temp-max">${maxTemp}°</div>
+                    <div class="temp-min">${minTemp}°</div>
+                </div>
+            `;
+            grid.insertAdjacentHTML('beforeend', itemHtml);
+        }
+    } catch (error) {
+        console.error('天気データの取得に失敗しました:', error);
+        document.querySelector('.weather-grid').innerHTML = '<p style="padding: 10px;">データの取得に失敗しました。</p>';
+    }
+}
+
+// ページ読み込み時に初期データ（東京）を表示
+document.addEventListener('DOMContentLoaded', () => fetchWeatherData());
     </script>
 </body>
 </html>
