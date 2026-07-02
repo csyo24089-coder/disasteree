@@ -346,96 +346,17 @@
         <!-- 3. 2週間天気予報 -->
         <div class="card" id="weather-section">
             <div class="card-title">
-                <span>2週間天気予報（東京）</span>
+                <span>2週間天気予報 <span id="current-region">（東京）</span></span>
                 <span class="badge badge-success">14日間</span>
             </div>
-            <div class="weather-grid">
-                <!-- 14日分のダミーデータ -->
-                <div class="weather-item">
-                    <div class="weather-date">今日</div>
-                    <div class="weather-icon">☀️</div>
-                    <div class="temp-max">31°</div>
-                    <div class="temp-min">24°</div>
-                </div>
-                <div class="weather-item">
-                    <div class="weather-date">明日</div>
-                    <div class="weather-icon">☁️</div>
-                    <div class="temp-max">29°</div>
-                    <div class="temp-min">23°</div>
-                </div>
-                <div class="weather-item">
-                    <div class="weather-date">7/4</div>
-                    <div class="weather-icon">☔</div>
-                    <div class="temp-max">26°</div>
-                    <div class="temp-min">22°</div>
-                </div>
-                <div class="weather-item">
-                    <div class="weather-date">7/5</div>
-                    <div class="weather-icon">☔</div>
-                    <div class="temp-max">27°</div>
-                    <div class="temp-min">21°</div>
-                </div>
-                <div class="weather-item">
-                    <div class="weather-date">7/6</div>
-                    <div class="weather-icon">☁️</div>
-                    <div class="temp-max">28°</div>
-                    <div class="temp-min">22°</div>
-                </div>
-                <div class="weather-item">
-                    <div class="weather-date">7/7</div>
-                    <div class="weather-icon">☀️</div>
-                    <div class="temp-max">32°</div>
-                    <div class="temp-min">24°</div>
-                </div>
-                <div class="weather-item">
-                    <div class="weather-date">7/8</div>
-                    <div class="weather-icon">☀️</div>
-                    <div class="temp-max">33°</div>
-                    <div class="temp-min">25°</div>
-                </div>
-                <div class="weather-item">
-                    <div class="weather-date">7/9</div>
-                    <div class="weather-icon">☁️</div>
-                    <div class="temp-max">30°</div>
-                    <div class="temp-min">24°</div>
-                </div>
-                <div class="weather-item">
-                    <div class="weather-date">7/10</div>
-                    <div class="weather-icon">☁️</div>
-                    <div class="temp-max">31°</div>
-                    <div class="temp-min">23°</div>
-                </div>
-                <div class="weather-item">
-                    <div class="weather-date">7/11</div>
-                    <div class="weather-icon">☔</div>
-                    <div class="temp-max">28°</div>
-                    <div class="temp-min">22°</div>
-                </div>
-                <div class="weather-item">
-                    <div class="weather-date">7/12</div>
-                    <div class="weather-icon">☀️</div>
-                    <div class="temp-max">32°</div>
-                    <div class="temp-min">24°</div>
-                </div>
-                <div class="weather-item">
-                    <div class="weather-date">7/13</div>
-                    <div class="weather-icon">☀️</div>
-                    <div class="temp-max">33°</div>
-                    <div class="temp-min">25°</div>
-                </div>
-                <div class="weather-item">
-                    <div class="weather-date">7/14</div>
-                    <div class="weather-icon">☁️</div>
-                    <div class="temp-max">30°</div>
-                    <div class="temp-min">23°</div>
-                </div>
-                <div class="weather-item">
-                    <div class="weather-date">7/15</div>
-                    <div class="weather-icon">☀️</div>
-                    <div class="temp-max">31°</div>
-                    <div class="temp-min">24°</div>
-                </div>
+            
+            <div class="search-box" style="margin-bottom: 15px;">
+                <input type="text" id="weatherRegionInput" placeholder="例：大阪、札幌、横浜">
+                <button onclick="searchWeatherByRegion()">地域を変更</button>
             </div>
+
+            <div class="weather-grid">
+                </div>
         </div>
 
         <!-- 4. 運行情報 -->
@@ -552,35 +473,64 @@
             alert('【シミュレーション発動】\n震度5強を検知したため、自動的に避難所ルートを検索・表示しました。');
         }
         
-        // 🌤️ 2週間天気予報データを取得して表示する関数
-async function fetchWeatherData() {
-    // 緯度・経度を設定（今回は東京駅を基準にします）
-    const lat = 35.6812;
-    const lon = 139.7671;
+// 🌤️ 地域名から緯度・経度を取得して天気を更新する関数
+async function searchWeatherByRegion() {
+    const regionInput = document.getElementById('weatherRegionInput').value;
+    if (!regionInput.trim()) {
+        alert('地域名を入力してください。');
+        return;
+    }
+
+    // Open-MeteoのジオコーディングAPIを使用して地名を検索
+    const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(regionInput)}&count=1&language=ja&format=json`;
+
+    try {
+        const response = await fetch(geoUrl);
+        const data = await response.json();
+
+        // 検索結果が見つかった場合
+        if (data.results && data.results.length > 0) {
+            const location = data.results[0];
+            const lat = location.latitude;
+            const lon = location.longitude;
+            const regionName = location.name; // APIが返してきた正式な地名
+
+            // 新しい座標と地名で天気予報を取得し直す
+            fetchWeatherData(lat, lon, regionName);
+        } else {
+            alert('指定された地域が見つかりませんでした。別の地名でお試しください。');
+        }
+    } catch (error) {
+        console.error('地域検索に失敗しました:', error);
+        alert('地域検索エラーが発生しました。');
+    }
+}
+
+// 🌤️ 2週間天気予報データを取得して表示する関数（引数を受け取れるように変更）
+// 初期値として、引数がない場合は東京の座標を設定
+async function fetchWeatherData(lat = 35.6812, lon = 139.7671, regionName = "東京") {
     
-    // Open-Meteo APIのURL（14日分の天気コード、最高・最低気温を取得）
+    // タイトルの地域名表示を更新
+    document.getElementById('current-region').innerText = `（${regionName}）`;
+
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo&forecast_days=14`;
 
     try {
-        // APIからデータを取得
         const response = await fetch(url);
         const data = await response.json();
 
-        // データを挿入するHTML要素（グリッド）を取得し、ダミーデータを消去
         const grid = document.querySelector('.weather-grid');
         grid.innerHTML = ''; 
 
-        // 天気コード（WMO基準）を絵文字に変換する関数
         const getWeatherEmoji = (code) => {
-            if (code === 0 || code === 1) return '☀️'; // 快晴・晴れ
-            if (code === 2 || code === 3) return '☁️'; // くもり
-            if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return '☔'; // 雨
-            if ((code >= 71 && code <= 77) || code >= 85) return '⛄'; // 雪
-            if (code >= 95) return '⚡'; // 雷
+            if (code === 0 || code === 1) return '☀️'; 
+            if (code === 2 || code === 3) return '☁️'; 
+            if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return '☔'; 
+            if ((code >= 71 && code <= 77) || code >= 85) return '⛄'; 
+            if (code >= 95) return '⚡'; 
             return '❓';
         };
 
-        // 日付を「今日」「明日」「M/D」に変換する関数
         const formatDate = (dateString, index) => {
             if (index === 0) return '今日';
             if (index === 1) return '明日';
@@ -588,10 +538,9 @@ async function fetchWeatherData() {
             return `${d.getMonth() + 1}/${d.getDate()}`;
         };
 
-        // 14日分のデータをループ処理してHTMLを生成
         for (let i = 0; i < data.daily.time.length; i++) {
             const dateStr = data.daily.time[i];
-            const maxTemp = Math.round(data.daily.temperature_2m_max[i]); // 四捨五入
+            const maxTemp = Math.round(data.daily.temperature_2m_max[i]); 
             const minTemp = Math.round(data.daily.temperature_2m_min[i]);
             const weatherCode = data.daily.weathercode[i];
 
@@ -603,7 +552,6 @@ async function fetchWeatherData() {
                     <div class="temp-min">${minTemp}°</div>
                 </div>
             `;
-            // 生成したHTMLをグリッドの最後に追加
             grid.insertAdjacentHTML('beforeend', itemHtml);
         }
     } catch (error) {
@@ -612,8 +560,8 @@ async function fetchWeatherData() {
     }
 }
 
-// ページが読み込まれたら自動的に天気データを取得する
-document.addEventListener('DOMContentLoaded', fetchWeatherData);
+// ページ読み込み時に初期データ（東京）を表示
+document.addEventListener('DOMContentLoaded', () => fetchWeatherData());
     </script>
 </body>
 </html>
