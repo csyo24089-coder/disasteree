@@ -195,21 +195,7 @@
         .temp-max { color: #ef4444; font-weight: bold; }
         .temp-min { color: #3b82f6; }
 
-        /* 運行情報 */
-        .transit-list {
-            list-style: none;
-        }
-        .transit-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #f1f5f9;
-        }
-        .transit-item:last-child { border-bottom: none; }
-        .line-name { font-weight: bold; }
-
-        /* 避難所ルート */
+        /* 検索ボックス */
         .search-box {
             display: flex;
             gap: 10px;
@@ -231,6 +217,20 @@
             cursor: pointer;
             font-weight: bold;
         }
+
+        /* 運行情報 */
+        .transit-list { list-style: none; }
+        .transit-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .transit-item:last-child { border-bottom: none; }
+        .line-name { font-weight: bold; }
+
+        /* 避難所ルート */
         .map-placeholder {
             background: #e2e8f0;
             height: 250px;
@@ -287,22 +287,18 @@
 </head>
 <body>
 
-    <!-- ヘッダー -->
     <header>
         <h1>🚨 スマート防災ナビ</h1>
         <button class="sim-btn" onclick="simulateEmergency()">テスト: 震度5以上発生</button>
     </header>
 
-    <!-- メインコンテンツ -->
     <div class="container">
 
-        <!-- 震度5以上連動用のアラート（通常非表示） -->
         <div id="emergencyAlert" class="emergency-alert">
             <h2>【緊急】大地震発表 (シミュレーション)</h2>
             <p>先ほど、震度5強の地震が発生しました。安全を確保し、以下の最寄り避難所へのルートを確認してください。</p>
         </div>
 
-        <!-- 1. 地震情報 -->
         <div class="card" id="earthquake-section">
             <div class="card-title">
                 <span>地震情報</span>
@@ -311,18 +307,17 @@
             <div class="eq-info">
                 <div class="eq-max-shindo">
                     <span>最大</span>
-                    <span class="num" id="display-shindo">4</span>
+                    <span class="num" id="display-shindo">-</span>
                 </div>
                 <div>
-                    <p><strong>発生日時:</strong> 2026年7月2日 15:30頃</p>
-                    <p><strong>震源地:</strong> 千葉県北西部</p>
-                    <p><strong>マグニチュード:</strong> M4.8</p>
-                    <p style="margin-top: 5px; color: var(--success-color); font-weight: bold;">津波の心配はありません。</p>
+                    <p><strong>発生日時:</strong> <span id="eq-time">読込中...</span></p>
+                    <p><strong>震源地:</strong> <span id="eq-epicenter">読込中...</span></p>
+                    <p><strong>マグニチュード:</strong> <span id="eq-magnitude">読込中...</span></p>
+                    <p id="eq-tsunami" style="margin-top: 5px; font-weight: bold;">読込中...</p>
                 </div>
             </div>
         </div>
 
-        <!-- 2. 台風情報 -->
         <div class="card" id="typhoon-section">
             <div class="card-title">
                 <span>台風情報</span>
@@ -343,23 +338,22 @@
             </div>
         </div>
 
-        <!-- 3. 2週間天気予報 -->
         <div class="card" id="weather-section">
             <div class="card-title">
                 <span>2週間天気予報 <span id="current-region">（東京）</span></span>
                 <span class="badge badge-success">14日間</span>
             </div>
             
-            <div class="search-box" style="margin-bottom: 15px;">
+            <div class="search-box">
                 <input type="text" id="weatherRegionInput" placeholder="例：大阪、札幌、横浜">
                 <button onclick="searchWeatherByRegion()">地域を変更</button>
             </div>
 
             <div class="weather-grid">
-                </div>
+                <p style="padding: 10px;">読込中...</p>
+            </div>
         </div>
 
-        <!-- 4. 運行情報 -->
         <div class="card" id="transit-section">
             <div class="card-title">
                 <span>遅延・運休情報（全国主要路線）</span>
@@ -387,17 +381,9 @@
                     </div>
                     <span class="badge badge-success">平常運転</span>
                 </li>
-                <li class="transit-item">
-                    <div>
-                        <span class="line-name">西鉄：天神大牟田線</span>
-                        <p style="font-size: 0.85rem; color: var(--text-light);">平常どおり運転しています</p>
-                    </div>
-                    <span class="badge badge-success">平常運転</span>
-                </li>
             </ul>
         </div>
 
-        <!-- 5. 最寄りの避難所ルート表示 -->
         <div class="card" id="shelter-section">
             <div class="card-title">
                 <span>最寄りの避難所ルート検索</span>
@@ -423,7 +409,6 @@
 
     </div>
 
-    <!-- スマートフォン用ボトムナビ（モック用） -->
     <div class="bottom-nav">
         <a href="#earthquake-section" class="nav-item active"><span class="nav-icon">⚠️</span>防災情報</a>
         <a href="#weather-section" class="nav-item"><span class="nav-icon">☀️</span>天気</a>
@@ -431,9 +416,8 @@
         <a href="#shelter-section" class="nav-item"><span class="nav-icon">📍</span>避難所</a>
     </div>
 
-    <!-- JavaScriptロジック -->
     <script>
-        // 住所からのルート検索（模擬）
+        // --- 避難所ルート関連（模擬） ---
         function searchRoute() {
             const address = document.getElementById('addressInput').value;
             if(!address.trim()) {
@@ -454,206 +438,183 @@
 
         // 震度5以上の連動シミュレーション
         function simulateEmergency() {
-            // 1. 地震情報の数値を「5強」に変更
             document.getElementById('display-shindo').innerText = "5強";
             
-            // 2. 緊急アラートバナーを表示
             const alertBanner = document.getElementById('emergencyAlert');
             alertBanner.style.display = "block";
             
-            // 3. 自動的に最寄り避難所ルート検索を実行
             searchRoute();
             
-            // 4. アラート位置までスムーズにスクロール
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             alert('【シミュレーション発動】\n震度5強を検知したため、自動的に避難所ルートを検索・表示しました。');
         }
-        
-// 🌤️ 地域名から緯度・経度を取得して天気を更新する関数（改善版）
-async function searchWeatherByRegion() {
-    const regionInput = document.getElementById('weatherRegionInput').value.trim();
-    if (!regionInput) {
-        alert('地域名を入力してください。');
-        return;
-    }
 
-    // 内部関数：APIを叩く処理をまとめる
-    const fetchGeoData = async (searchQuery) => {
-        const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchQuery)}&count=1&language=ja&format=json`;
-        const response = await fetch(geoUrl);
-        return await response.json();
-    };
+        // --- 天気予報API関連 ---
+        async function searchWeatherByRegion() {
+            const regionInput = document.getElementById('weatherRegionInput').value.trim();
+            if (!regionInput) {
+                alert('地域名を入力してください。');
+                return;
+            }
 
-    try {
-        // 1. まずはユーザーの入力通りに検索
-        let data = await fetchGeoData(regionInput);
-
-        // 2. 見つからなかった場合「県」をつけて再検索（例: 千葉 → 千葉県）
-        if (!data.results || data.results.length === 0) {
-            console.log(`「${regionInput}」で見つからないため、「県」を追加して再検索します...`);
-            data = await fetchGeoData(regionInput + "県");
-        }
-
-        // 3. それでも見つからなかった場合「市」をつけて再検索（例: 船橋 → 船橋市）
-        if (!data.results || data.results.length === 0) {
-            console.log(`「${regionInput}県」でも見つからないため、「市」を追加して再検索します...`);
-            data = await fetchGeoData(regionInput + "市");
-        }
-
-        // 最終判定：データが見つかったか
-        if (data.results && data.results.length > 0) {
-            const location = data.results[0];
-            const lat = location.latitude;
-            const lon = location.longitude;
-            // APIが返した正式名称（Chiba Prefectureなどの場合があるため、表示はユーザー入力値を優先）
-            const displayName = location.name.match(/^[a-zA-Z]/) ? regionInput : location.name; 
-
-            // 新しい座標と地名で天気予報を取得し直す
-            fetchWeatherData(lat, lon, displayName);
-        } else {
-            alert('指定された地域が見つかりませんでした。「千葉県」や「那覇市」のように都道府県や市区町村をつけてお試しください。');
-        }
-    } catch (error) {
-        console.error('地域検索に失敗しました:', error);
-        alert('地域検索エラーが発生しました。');
-    }
-}
-// 🌤️ 2週間天気予報データを取得して表示する関数（引数を受け取れるように変更）
-// 初期値として、引数がない場合は東京の座標を設定
-async function fetchWeatherData(lat = 35.6812, lon = 139.7671, regionName = "東京") {
-    
-    // タイトルの地域名表示を更新
-    document.getElementById('current-region').innerText = `（${regionName}）`;
-
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo&forecast_days=14`;
-
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-
-        const grid = document.querySelector('.weather-grid');
-        grid.innerHTML = ''; 
-
-        const getWeatherEmoji = (code) => {
-            if (code === 0 || code === 1) return '☀️'; 
-            if (code === 2 || code === 3) return '☁️'; 
-            if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return '☔'; 
-            if ((code >= 71 && code <= 77) || code >= 85) return '⛄'; 
-            if (code >= 95) return '⚡'; 
-            return '❓';
-        };
-
-        const formatDate = (dateString, index) => {
-            if (index === 0) return '今日';
-            if (index === 1) return '明日';
-            const d = new Date(dateString);
-            return `${d.getMonth() + 1}/${d.getDate()}`;
-        };
-
-        for (let i = 0; i < data.daily.time.length; i++) {
-            const dateStr = data.daily.time[i];
-            const maxTemp = Math.round(data.daily.temperature_2m_max[i]); 
-            const minTemp = Math.round(data.daily.temperature_2m_min[i]);
-            const weatherCode = data.daily.weathercode[i];
-
-            const itemHtml = `
-                <div class="weather-item">
-                    <div class="weather-date">${formatDate(dateStr, i)}</div>
-                    <div class="weather-icon">${getWeatherEmoji(weatherCode)}</div>
-                    <div class="temp-max">${maxTemp}°</div>
-                    <div class="temp-min">${minTemp}°</div>
-                </div>
-            `;
-            grid.insertAdjacentHTML('beforeend', itemHtml);
-        }
-    } catch (error) {
-        console.error('天気データの取得に失敗しました:', error);
-        document.querySelector('.weather-grid').innerHTML = '<p style="padding: 10px;">データの取得に失敗しました。</p>';
-    }
-}
-
-        // 🚨 最新の地震情報を取得して表示する関数
-// 🚨 最新の地震情報を取得して表示する関数
-async function fetchEarthquakeData() {
-    const url = 'https://api.p2pquake.net/v2/history?codes=551&limit=1';
-
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (data && data.length > 0) {
-            // データが存在する場合の処理
-            const eqInfo = data[0].earthquake;
-            const timeStr = eqInfo.time; 
-            const epicenter = eqInfo.hypocenter.name; 
-            const magnitude = eqInfo.hypocenter.magnitude; 
-            const maxScaleCode = eqInfo.maxScale; 
-            const domesticTsunami = data[0].issue.tsunami;
-
-            const getShindoText = (scaleCode) => {
-                const scaleMap = {
-                    10: '1', 20: '2', 30: '3', 40: '4',
-                    45: '5弱', 50: '5強', 55: '6弱', 60: '6強', 70: '7'
-                };
-                return scaleMap[scaleCode] || '不明';
+            const fetchGeoData = async (searchQuery) => {
+                const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchQuery)}&count=1&language=ja&format=json`;
+                const response = await fetch(geoUrl);
+                return await response.json();
             };
-            const shindoText = getShindoText(maxScaleCode);
 
-            const d = new Date(timeStr);
-            const formattedTime = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}頃`;
+            try {
+                let data = await fetchGeoData(regionInput);
 
-            let tsunamiText = "津波情報の調査中";
-            let tsunamiColor = "var(--text-color)";
-            if (domesticTsunami === "None") {
-                tsunamiText = "津波の心配はありません。";
-                tsunamiColor = "var(--success-color)";
-            } else if (domesticTsunami === "Warning" || domesticTsunami === "MajorWarning") {
-                tsunamiText = "⚠️ 津波警報・注意報が発表されています！";
-                tsunamiColor = "var(--danger-color)";
+                if (!data.results || data.results.length === 0) {
+                    console.log(`「${regionInput}」で見つからないため、「県」を追加して再検索します...`);
+                    data = await fetchGeoData(regionInput + "県");
+                }
+
+                if (!data.results || data.results.length === 0) {
+                    console.log(`「${regionInput}県」でも見つからないため、「市」を追加して再検索します...`);
+                    data = await fetchGeoData(regionInput + "市");
+                }
+
+                if (data.results && data.results.length > 0) {
+                    const location = data.results[0];
+                    const lat = location.latitude;
+                    const lon = location.longitude;
+                    const displayName = location.name.match(/^[a-zA-Z]/) ? regionInput : location.name; 
+                    
+                    fetchWeatherData(lat, lon, displayName);
+                } else {
+                    alert('指定された地域が見つかりませんでした。「千葉県」や「那覇市」のように都道府県や市区町村をつけてお試しください。');
+                }
+            } catch (error) {
+                console.error('地域検索に失敗しました:', error);
+                alert('地域検索エラーが発生しました。');
             }
-
-            document.getElementById('display-shindo').innerText = shindoText;
-            document.getElementById('eq-time').innerText = formattedTime;
-            document.getElementById('eq-epicenter').innerText = epicenter || "調査中";
-            document.getElementById('eq-magnitude').innerText = magnitude !== -1 ? `M${magnitude}` : "調査中";
-            
-            const tsunamiElement = document.getElementById('eq-tsunami');
-            tsunamiElement.innerText = tsunamiText;
-            tsunamiElement.style.color = tsunamiColor;
-
-            if (maxScaleCode >= 45) {
-                console.log("震度5弱以上を検知しました。緊急モードを起動します。");
-            }
-        } else {
-            // 💡 データが空（地震情報がない）場合の処理を追加
-            document.getElementById('display-shindo').innerText = "-";
-            document.getElementById('eq-time').innerText = "現在地震は発生していません";
-            document.getElementById('eq-epicenter').innerText = "-";
-            document.getElementById('eq-magnitude').innerText = "-";
-            
-            const tsunamiElement = document.getElementById('eq-tsunami');
-            tsunamiElement.innerText = "津波の心配はありません。";
-            tsunamiElement.style.color = "var(--text-light)";
         }
-    } catch (error) {
-        console.error('地震情報の取得に失敗しました:', error);
-        // エラー時もユーザーが不安にならない表記に変更
-        document.getElementById('display-shindo').innerText = "-";
-        document.getElementById('eq-time').innerText = "情報取得エラー";
-        document.getElementById('eq-epicenter').innerText = "-";
-        document.getElementById('eq-magnitude').innerText = "-";
-    }
-}
-        
-// ページ読み込み時に各データを取得
-document.addEventListener('DOMContentLoaded', () => {
-    fetchWeatherData();
-    fetchEarthquakeData(); // 追加：地震情報の取得
-});
+
+        async function fetchWeatherData(lat = 35.6812, lon = 139.7671, regionName = "東京") {
+            document.getElementById('current-region').innerText = `（${regionName}）`;
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo&forecast_days=14`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                const grid = document.querySelector('.weather-grid');
+                grid.innerHTML = ''; 
+
+                const getWeatherEmoji = (code) => {
+                    if (code === 0 || code === 1) return '☀️'; 
+                    if (code === 2 || code === 3) return '☁️'; 
+                    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return '☔'; 
+                    if ((code >= 71 && code <= 77) || code >= 85) return '⛄'; 
+                    if (code >= 95) return '⚡'; 
+                    return '❓';
+                };
+
+                const formatDate = (dateString, index) => {
+                    if (index === 0) return '今日';
+                    if (index === 1) return '明日';
+                    const d = new Date(dateString);
+                    return `${d.getMonth() + 1}/${d.getDate()}`;
+                };
+
+                for (let i = 0; i < data.daily.time.length; i++) {
+                    const dateStr = data.daily.time[i];
+                    const maxTemp = Math.round(data.daily.temperature_2m_max[i]); 
+                    const minTemp = Math.round(data.daily.temperature_2m_min[i]);
+                    const weatherCode = data.daily.weathercode[i];
+
+                    const itemHtml = `
+                        <div class="weather-item">
+                            <div class="weather-date">${formatDate(dateStr, i)}</div>
+                            <div class="weather-icon">${getWeatherEmoji(weatherCode)}</div>
+                            <div class="temp-max">${maxTemp}°</div>
+                            <div class="temp-min">${minTemp}°</div>
+                        </div>
+                    `;
+                    grid.insertAdjacentHTML('beforeend', itemHtml);
+                }
+            } catch (error) {
+                console.error('天気データの取得に失敗しました:', error);
+                document.querySelector('.weather-grid').innerHTML = '<p style="padding: 10px;">データの取得に失敗しました。</p>';
+            }
+        }
+
+        // --- 地震情報API関連 ---
+        async function fetchEarthquakeData() {
+            const url = 'https://api.p2pquake.net/v2/history?codes=551&limit=1';
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    const eqInfo = data[0].earthquake;
+                    const timeStr = eqInfo.time; 
+                    const epicenter = eqInfo.hypocenter.name; 
+                    const magnitude = eqInfo.hypocenter.magnitude; 
+                    const maxScaleCode = eqInfo.maxScale; 
+                    const domesticTsunami = data[0].issue.tsunami;
+
+                    const getShindoText = (scaleCode) => {
+                        const scaleMap = {
+                            10: '1', 20: '2', 30: '3', 40: '4',
+                            45: '5弱', 50: '5強', 55: '6弱', 60: '6強', 70: '7'
+                        };
+                        return scaleMap[scaleCode] || '不明';
+                    };
+                    const shindoText = getShindoText(maxScaleCode);
+
+                    const d = new Date(timeStr);
+                    const formattedTime = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}頃`;
+
+                    let tsunamiText = "津波情報の調査中";
+                    let tsunamiColor = "var(--text-color)";
+                    if (domesticTsunami === "None") {
+                        tsunamiText = "津波の心配はありません。";
+                        tsunamiColor = "var(--success-color)";
+                    } else if (domesticTsunami === "Warning" || domesticTsunami === "MajorWarning") {
+                        tsunamiText = "⚠️ 津波警報・注意報が発表されています！";
+                        tsunamiColor = "var(--danger-color)";
+                    }
+
+                    document.getElementById('display-shindo').innerText = shindoText;
+                    document.getElementById('eq-time').innerText = formattedTime;
+                    document.getElementById('eq-epicenter').innerText = epicenter || "調査中";
+                    document.getElementById('eq-magnitude').innerText = magnitude !== -1 ? `M${magnitude}` : "調査中";
+                    
+                    const tsunamiElement = document.getElementById('eq-tsunami');
+                    tsunamiElement.innerText = tsunamiText;
+                    tsunamiElement.style.color = tsunamiColor;
+
+                    if (maxScaleCode >= 45) {
+                        console.log("震度5弱以上を検知しました。緊急モードを起動します。");
+                    }
+                } else {
+                    document.getElementById('display-shindo').innerText = "-";
+                    document.getElementById('eq-time').innerText = "現在地震は発生していません";
+                    document.getElementById('eq-epicenter').innerText = "-";
+                    document.getElementById('eq-magnitude').innerText = "-";
+                    
+                    const tsunamiElement = document.getElementById('eq-tsunami');
+                    tsunamiElement.innerText = "津波の心配はありません。";
+                    tsunamiElement.style.color = "var(--text-light)";
+                }
+            } catch (error) {
+                console.error('地震情報の取得に失敗しました:', error);
+                document.getElementById('display-shindo').innerText = "-";
+                document.getElementById('eq-time').innerText = "情報取得エラー";
+                document.getElementById('eq-epicenter').innerText = "-";
+                document.getElementById('eq-magnitude').innerText = "-";
+            }
+        }
+
+        // --- ページ読み込み時の初期化処理 ---
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchWeatherData();
+            fetchEarthquakeData();
+        });
     </script>
 </body>
 </html>
