@@ -185,4 +185,81 @@
 
             // 2. 台風 API (気象庁 JSON)
             try {
-                const typhoonRes = await fetch('
+                const typhoonRes = await fetch('https://www.jma.go.jp/bosai/typhoon/data/TC.json');
+                
+                if (typhoonRes.status === 404) {
+                    document.getElementById('typhoon-text').textContent = "現在、発生している台風はありません。";
+                } else if (!typhoonRes.ok) {
+                    throw new Error('Typhoon API Error');
+                } else {
+                    const typhoonData = await typhoonRes.json();
+                    if (!typhoonData || typhoonData.length === 0) {
+                        document.getElementById('typhoon-text').textContent = "現在、発生している台風はありません。";
+                    } else {
+                        document.getElementById('typhoon-text').innerHTML = `<strong style="color:#d35400;">現在、${typhoonData.length}個の台風が発生しています。気象庁の情報を確認してください。</strong>`;
+                    }
+                }
+            } catch (error) {
+                console.error(error);
+                document.getElementById('typhoon-text').textContent = "台風情報の取得に失敗しました。";
+            }
+
+            // 3. 遅延 API (鉄道遅延情報API)
+            try {
+                const delayRes = await fetch('https://tetsudo.rti-giken.jp/free/delay.json');
+                if (!delayRes.ok) throw new Error('Delay API Error');
+                const delayData = await delayRes.json();
+                
+                if (!delayData || delayData.length === 0) {
+                    document.getElementById('delay-text').textContent = "現在、遅延している路線はありません。";
+                } else {
+                    let listHtml = '<ul class="delay-list">';
+                    delayData.forEach(line => {
+                        listHtml += `<li>${line.company} - ${line.name}</li>`;
+                    });
+                    listHtml += '</ul>';
+                    document.getElementById('delay-text').innerHTML = listHtml;
+                }
+            } catch (error) {
+                console.error(error);
+                document.getElementById('delay-text').textContent = "遅延情報の取得に失敗しました。";
+            }
+
+            // 4. 地震 API (P2P地震情報)
+            try {
+                const quakeRes = await fetch('https://api.p2pquake.net/v2/history?codes=551&limit=10');
+                if (!quakeRes.ok) throw new Error('Earthquake API Error');
+                const quakeData = await quakeRes.json();
+                
+                // 「東京都」の末尾を削り「東京」にする（地域マッチング用、北海道はそのまま）
+                let searchName = region.name;
+                if (searchName !== "北海道" && searchName.length > 2) {
+                    searchName = searchName.slice(0, -1);
+                }
+
+                // 直近の地震履歴から選択した地域を検索
+                const recentMatch = quakeData.find(q => 
+                    q.earthquake?.hypocenter?.name?.includes(searchName)
+                );
+
+                if (recentMatch) {
+                    const time = recentMatch.earthquake.time;
+                    document.getElementById('earthquake-alert').style.display = 'block';
+                    document.getElementById('earthquake-text').innerHTML = `
+                        <p><strong>発生時刻:</strong> ${time}</p>
+                        <p><strong>震源地:</strong> ${recentMatch.earthquake.hypocenter.name}</p>
+                        <p>※直近で該当地域に関連する地震データを受信しました。</p>
+                    `;
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // ページ読み込み時に自動で実行
+        window.onload = function() {
+            fetchDisasterInfo();
+        };
+    </script>
+</body>
+</html>
