@@ -3,618 +3,266 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>スマート防災ナビ - プロトタイプ</title>
+    <title>全国防災・運行情報アプリ</title>
     <style>
-        :root {
-            --primary-color: #1e3a8a;
-            --secondary-color: #3b82f6;
-            --danger-color: #dc2626;
-            --warning-color: #f59e0b;
-            --success-color: #10b981;
-            --bg-color: #f1f5f9;
-            --card-bg: #ffffff;
-            --text-color: #334155;
-            --text-light: #64748b;
-        }
-
-        * {
-            box-sizing: border-box;
+        /* ベーススタイル */
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
             margin: 0;
             padding: 0;
-            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
         }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            line-height: 1.6;
-            padding-bottom: 60px;
-        }
-
-        /* ヘッダー */
         header {
-            background-color: var(--primary-color);
+            background-color: #2c3e50;
             color: white;
-            padding: 15px 20px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 15px;
+            text-align: center;
         }
-
-        header h1 {
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* シミュレーション用ボタン */
-        .sim-btn {
-            background-color: var(--danger-color);
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: background 0.2s;
-        }
-        .sim-btn:hover {
-            background-color: #b91c1c;
-        }
-
-        /* メインコンテナ */
         .container {
             max-width: 800px;
-            margin: 20px auto;
-            padding: 0 15px;
-        }
-
-        /* 緊急アラート（初期非表示） */
-        .emergency-alert {
-            display: none;
-            background-color: #fef2f2;
-            border: 2px solid var(--danger-color);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            animation: blink 2s infinite;
-        }
-
-        @keyframes blink {
-            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
-        }
-
-        .emergency-alert h2 {
-            color: var(--danger-color);
-            font-size: 1.2rem;
-            margin-bottom: 5px;
-        }
-
-        /* カード共通スタイル */
-        .card {
-            background: var(--card-bg);
-            border-radius: 8px;
+            margin: 0 auto;
             padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
-
-        .card-title {
-            font-size: 1.1rem;
-            border-left: 4px solid var(--secondary-color);
-            padding-left: 10px;
-            margin-bottom: 15px;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .badge {
-            font-size: 0.75rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: white;
-            font-weight: normal;
-        }
-        .badge-danger { background-color: var(--danger-color); }
-        .badge-warning { background-color: var(--warning-color); }
-        .badge-success { background-color: var(--success-color); }
-
-        /* 地震情報 */
-        .eq-info {
-            display: grid;
-            grid-template-columns: auto 1fr;
-            gap: 15px;
-            background: #fff7ed;
-            padding: 15px;
-            border-radius: 6px;
-            border-left: 4px solid var(--warning-color);
-        }
-        .eq-max-shindo {
-            background: var(--warning-color);
-            color: white;
-            padding: 10px;
-            border-radius: 4px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .eq-max-shindo .num { font-size: 1.8rem; font-weight: bold; line-height: 1; }
-
-        /* 台風情報 */
-        .typhoon-container {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-        }
-        @media(min-width: 600px) {
-            .typhoon-container { grid-template-columns: 1fr 1fr; }
-        }
-        .typhoon-map-placeholder {
-            background: #e2e8f0;
-            height: 180px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-light);
-            font-size: 0.9rem;
-            border: 1px dashed #cbd5e1;
-        }
-
-        /* 2週間天気予報 */
-        .weather-grid {
-            display: flex;
-            overflow-x: auto;
-            gap: 12px;
-            padding-bottom: 10px;
-            scroll-snap-type: x mandatory;
-        }
-        .weather-item {
-            flex: 0 0 75px;
-            background: #f8fafc;
-            border-radius: 6px;
-            padding: 10px 5px;
-            text-align: center;
-            font-size: 0.85rem;
-            scroll-snap-align: start;
-            border: 1px solid #e2e8f0;
-        }
-        .weather-date { font-weight: bold; margin-bottom: 5px; }
-        .weather-icon { font-size: 1.5rem; margin: 5px 0; }
-        .temp-max { color: #ef4444; font-weight: bold; }
-        .temp-min { color: #3b82f6; }
-
-        /* 検索ボックス */
+        /* 検索エリア */
         .search-box {
             display: flex;
             gap: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
-        .search-box input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #cbd5e1;
+        .search-box select {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
             border-radius: 4px;
-            font-size: 1rem;
+            font-size: 16px;
         }
         .search-box button {
-            background-color: var(--secondary-color);
+            padding: 12px 24px;
+            background-color: #3498db;
             color: white;
             border: none;
-            padding: 0 20px;
             border-radius: 4px;
             cursor: pointer;
-            font-weight: bold;
+            font-size: 16px;
         }
-
-        /* 運行情報 */
-        .transit-list { list-style: none; }
-        .transit-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #f1f5f9;
+        .search-box button:hover {
+            background-color: #2980b9;
         }
-        .transit-item:last-child { border-bottom: none; }
-        .line-name { font-weight: bold; }
-
-        /* 避難所ルート */
-        .map-placeholder {
-            background: #e2e8f0;
-            height: 250px;
-            border-radius: 6px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-light);
-            font-size: 0.9rem;
-            border: 1px dashed #cbd5e1;
-            text-align: center;
-            padding: 20px;
-        }
-        .route-instructions {
-            margin-top: 15px;
-            background: #f8fafc;
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            display: none;
-        }
-
-        /* ボトムナビ（スマホ用） */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
+        
+        /* 各情報カードのスタイル */
+        .card {
             background: white;
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-            font-size: 0.75rem;
-            z-index: 100;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        .nav-item {
-            text-align: center;
-            color: var(--text-light);
-            text-decoration: none;
-            flex: 1;
-        }
-        .nav-item.active {
-            color: var(--secondary-color);
-            font-weight: bold;
-        }
-        .nav-icon {
+        .card h2 {
+            margin-top: 0;
             font-size: 1.2rem;
-            display: block;
-            margin-bottom: 2px;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+        }
+        .loading {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        /* 地震速報（緊急）のスタイル */
+        #earthquake-alert {
+            display: none;
+            background-color: #e74c3c;
+            color: white;
+            border: 2px solid #c0392b;
+            animation: blink 2s infinite;
+        }
+        #earthquake-alert h2 {
+            border-bottom: 2px solid #c0392b;
+        }
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.85; }
+            100% { opacity: 1; }
+        }
+        ul.delay-list {
+            margin: 0;
+            padding-left: 20px;
         }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>🚨 スマート防災ナビ</h1>
-        <button class="sim-btn" onclick="simulateEmergency()">テスト: 震度5以上発生</button>
+        <h1>防災・運行情報センター</h1>
     </header>
 
     <div class="container">
-
-        <div id="emergencyAlert" class="emergency-alert">
-            <h2>【緊急】大地震発表 (シミュレーション)</h2>
-            <p>先ほど、震度5強の地震が発生しました。安全を確保し、以下の最寄り避難所へのルートを確認してください。</p>
+        <div class="search-box">
+            <select id="regionSelect"></select>
+            <button onclick="fetchDisasterInfo()">情報を取得</button>
         </div>
 
-        <div class="card" id="earthquake-section">
-            <div class="card-title">
-                <span>地震情報</span>
-                <span class="badge badge-warning">最新</span>
-            </div>
-            <div class="eq-info">
-                <div class="eq-max-shindo">
-                    <span>最大</span>
-                    <span class="num" id="display-shindo">-</span>
-                </div>
-                <div>
-                    <p><strong>発生日時:</strong> <span id="eq-time">読込中...</span></p>
-                    <p><strong>震源地:</strong> <span id="eq-epicenter">読込中...</span></p>
-                    <p><strong>マグニチュード:</strong> <span id="eq-magnitude">読込中...</span></p>
-                    <p id="eq-tsunami" style="margin-top: 5px; font-weight: bold;">読込中...</p>
-                </div>
-            </div>
+        <div id="earthquake-alert" class="card">
+            <h2>⚠️ 関連する地震情報</h2>
+            <div id="earthquake-text"></div>
         </div>
 
-        <div class="card" id="typhoon-section">
-            <div class="card-title">
-                <span>台風情報</span>
-                <span class="badge badge-danger">警戒</span>
-            </div>
-            <div class="typhoon-container">
-                <div>
-                    <p><strong>台風第4号 (ネパルタック)</strong></p>
-                    <p><strong>存在地域:</strong> 日本の南</p>
-                    <p><strong>進行方向・速さ:</strong> 北西 20km/h</p>
-                    <p><strong>中心気圧:</strong> 975 hPa</p>
-                    <p><strong>最大風速:</strong> 35 m/s</p>
-                    <p style="margin-top: 10px; font-size: 0.85rem; color: var(--text-light);">※最新の予報円では、4日後に本州へ接近する可能性があります。</p>
-                </div>
-                <div class="typhoon-map-placeholder">
-                    【最新の予想進路図（画像イメージ枠）】
-                </div>
-            </div>
+        <div class="card" id="weather-info">
+            <h2>☀️ 天気情報 (<span class="region-label"></span>)</h2>
+            <div id="weather-text" class="loading">検索ボタンを押してください...</div>
         </div>
 
-        <div class="card" id="weather-section">
-            <div class="card-title">
-                <span>2週間天気予報 <span id="current-region">（東京）</span></span>
-                <span class="badge badge-success">14日間</span>
-            </div>
-            
-            <div class="search-box">
-                <input type="text" id="weatherRegionInput" placeholder="例：大阪、札幌、横浜">
-                <button onclick="searchWeatherByRegion()">地域を変更</button>
-            </div>
-
-            <div class="weather-grid">
-                <p style="padding: 10px;">読込中...</p>
-            </div>
+        <div class="card" id="typhoon-info">
+            <h2>🌀 台風情報 (全国)</h2>
+            <div id="typhoon-text" class="loading">待機中...</div>
         </div>
 
-        <div class="card" id="transit-section">
-            <div class="card-title">
-                <span>遅延・運休情報（全国主要路線）</span>
-                <span class="badge badge-warning">2路線 遅延</span>
-            </div>
-            <ul class="transit-list">
-                <li class="transit-item">
-                    <div>
-                        <span class="line-name">JR東日本：山手線</span>
-                        <p style="font-size: 0.85rem; color: var(--text-light);">前を走る列車遅延の影響</p>
-                    </div>
-                    <span class="badge badge-warning">遅延 (約15分)</span>
-                </li>
-                <li class="transit-item">
-                    <div>
-                        <span class="line-name">JR西日本：大阪環状線</span>
-                        <p style="font-size: 0.85rem; color: var(--text-light);">車両点検の影響</p>
-                    </div>
-                    <span class="badge badge-warning">遅延 (約10分)</span>
-                </li>
-                <li class="transit-item">
-                    <div>
-                        <span class="line-name">東京メトロ：銀座線</span>
-                        <p style="font-size: 0.85rem; color: var(--text-light);">平常どおり運転しています</p>
-                    </div>
-                    <span class="badge badge-success">平常運転</span>
-                </li>
-            </ul>
+        <div class="card" id="delay-info">
+            <h2>🚃 鉄道遅延情報 (全国)</h2>
+            <p style="font-size: 0.8em; color: #666;">※路線ごとの都道府県判定が難しいため、現在遅延している全国の路線を表示します。</p>
+            <div id="delay-text" class="loading">待機中...</div>
         </div>
-
-        <div class="card" id="shelter-section">
-            <div class="card-title">
-                <span>最寄りの避難所ルート検索</span>
-            </div>
-            <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 10px;">
-                ※住所を入力すると、最寄りの指定緊急避難場所までのルートを検索します。<br>
-                （震度5度以上の地震を検知した場合は自動でルートを展開します）
-            </p>
-            <div class="search-box">
-                <input type="text" id="addressInput" placeholder="例：東京都江東区豊洲×-×-×" value="東京都江東区豊洲">
-                <button onclick="searchRoute()">ルート検索</button>
-            </div>
-            <div class="map-placeholder" id="mapPlaceholder">
-                🗺️【Google Maps 描画エリア枠】<br>
-                <span style="font-size: 0.8rem; margin-top: 5px;">住所を入力して検索、または上の「震度5以上発生」テストボタンを押してください。</span>
-            </div>
-            <div class="route-instructions" id="routeInstructions">
-                <p><strong>🗺️ 案内ルート（模擬表示）:</strong></p>
-                <p>現在地（入力住所）から <strong>「豊洲小学校（指定避難所）」</strong> までのルートを表示中</p>
-                <p style="font-size: 0.85rem; margin-top: 5px; color: var(--text-light);">距離: 450m | 徒歩: 約6分</p>
-            </div>
-        </div>
-
-    </div>
-
-    <div class="bottom-nav">
-        <a href="#earthquake-section" class="nav-item active"><span class="nav-icon">⚠️</span>防災情報</a>
-        <a href="#weather-section" class="nav-item"><span class="nav-icon">☀️</span>天気</a>
-        <a href="#transit-section" class="nav-item"><span class="nav-icon">🚃</span>運行</a>
-        <a href="#shelter-section" class="nav-item"><span class="nav-icon">📍</span>避難所</a>
     </div>
 
     <script>
-        // --- 避難所ルート関連（模擬） ---
-        function searchRoute() {
-            const address = document.getElementById('addressInput').value;
-            if(!address.trim()) {
-                alert('住所を入力してください。');
-                return;
-            }
-            
-            const mapBox = document.getElementById('mapPlaceholder');
-            const routeBox = document.getElementById('routeInstructions');
-            
-            mapBox.innerHTML = `🗺️ <strong>【Google Maps 連動成功】</strong><br>「${address}」周辺のマップと最寄り避難所ルートを描画中...`;
-            mapBox.style.background = "#dbeafe";
-            mapBox.style.color = "#1e40af";
-            mapBox.style.border = "1px solid #93c5fd";
-            
-            routeBox.style.display = "block";
-        }
+        // 47都道府県のデータ（緯度・経度）
+        const prefectures = [
+            { name: "北海道", lat: 43.06417, lon: 141.34694 }, { name: "青森県", lat: 40.82444, lon: 140.74 }, { name: "岩手県", lat: 39.70361, lon: 141.1525 }, { name: "宮城県", lat: 38.26889, lon: 140.87194 }, { name: "秋田県", lat: 39.71861, lon: 140.1025 }, { name: "山形県", lat: 38.24056, lon: 140.36333 }, { name: "福島県", lat: 37.75, lon: 140.46778 }, { name: "茨城県", lat: 36.34139, lon: 140.44667 }, { name: "栃木県", lat: 36.56583, lon: 139.88361 }, { name: "群馬県", lat: 36.39111, lon: 139.06083 }, { name: "埼玉県", lat: 35.85694, lon: 139.64889 }, { name: "千葉県", lat: 35.60472, lon: 140.12333 }, { name: "東京都", lat: 35.68944, lon: 139.69167 }, { name: "神奈川県", lat: 35.44778, lon: 139.6425 }, { name: "新潟県", lat: 37.90222, lon: 139.02361 }, { name: "富山県", lat: 36.69528, lon: 137.21139 }, { name: "石川県", lat: 36.59444, lon: 136.62556 }, { name: "福井県", lat: 36.06528, lon: 136.22194 }, { name: "山梨県", lat: 35.66389, lon: 138.56833 }, { name: "長野県", lat: 36.65139, lon: 138.18111 }, { name: "岐阜県", lat: 35.39111, lon: 136.72222 }, { name: "静岡県", lat: 34.97694, lon: 138.38306 }, { name: "愛知県", lat: 35.18028, lon: 136.90667 }, { name: "三重県", lat: 34.73028, lon: 136.50861 }, { name: "滋賀県", lat: 35.00444, lon: 135.86833 }, { name: "京都府", lat: 35.02139, lon: 135.75556 }, { name: "大阪府", lat: 34.68639, lon: 135.52 }, { name: "兵庫県", lat: 34.69139, lon: 135.18306 }, { name: "奈良県", lat: 34.68528, lon: 135.83278 }, { name: "和歌山県", lat: 34.22611, lon: 135.1675 }, { name: "鳥取県", lat: 35.50361, lon: 134.23833 }, { name: "島根県", lat: 35.47222, lon: 133.05056 }, { name: "岡山県", lat: 34.66167, lon: 133.935 }, { name: "広島県", lat: 34.39639, lon: 132.45944 }, { name: "山口県", lat: 34.18583, lon: 131.47139 }, { name: "徳島県", lat: 34.06583, lon: 134.55944 }, { name: "香川県", lat: 34.34028, lon: 134.04333 }, { name: "愛媛県", lat: 33.84167, lon: 132.76611 }, { name: "高知県", lat: 33.55972, lon: 133.53111 }, { name: "福岡県", lat: 33.60639, lon: 130.41806 }, { name: "佐賀県", lat: 33.26333, lon: 130.30083 }, { name: "長崎県", lat: 32.74472, lon: 129.87361 }, { name: "熊本県", lat: 32.78972, lon: 130.74167 }, { name: "大分県", lat: 33.23806, lon: 131.6125 }, { name: "宮崎県", lat: 31.91111, lon: 131.42389 }, { name: "鹿児島県", lat: 31.56028, lon: 130.55806 }, { name: "沖縄県", lat: 26.2125, lon: 127.68111 }
+        ];
 
-        // 震度5以上の連動シミュレーション
-        function simulateEmergency() {
-            document.getElementById('display-shindo').innerText = "5強";
-            
-            const alertBanner = document.getElementById('emergencyAlert');
-            alertBanner.style.display = "block";
-            
-            searchRoute();
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            alert('【シミュレーション発動】\n震度5強を検知したため、自動的に避難所ルートを検索・表示しました。');
-        }
-
-        // --- 天気予報API関連 ---
-        async function searchWeatherByRegion() {
-            const regionInput = document.getElementById('weatherRegionInput').value.trim();
-            if (!regionInput) {
-                alert('地域名を入力してください。');
-                return;
-            }
-
-            const fetchGeoData = async (searchQuery) => {
-                const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchQuery)}&count=1&language=ja&format=json`;
-                const response = await fetch(geoUrl);
-                return await response.json();
-            };
-
-            try {
-                let data = await fetchGeoData(regionInput);
-
-                if (!data.results || data.results.length === 0) {
-                    console.log(`「${regionInput}」で見つからないため、「県」を追加して再検索します...`);
-                    data = await fetchGeoData(regionInput + "県");
-                }
-
-                if (!data.results || data.results.length === 0) {
-                    console.log(`「${regionInput}県」でも見つからないため、「市」を追加して再検索します...`);
-                    data = await fetchGeoData(regionInput + "市");
-                }
-
-                if (data.results && data.results.length > 0) {
-                    const location = data.results[0];
-                    const lat = location.latitude;
-                    const lon = location.longitude;
-                    const displayName = location.name.match(/^[a-zA-Z]/) ? regionInput : location.name; 
-                    
-                    fetchWeatherData(lat, lon, displayName);
-                } else {
-                    alert('指定された地域が見つかりませんでした。「千葉県」や「那覇市」のように都道府県や市区町村をつけてお試しください。');
-                }
-            } catch (error) {
-                console.error('地域検索に失敗しました:', error);
-                alert('地域検索エラーが発生しました。');
-            }
-        }
-
-        async function fetchWeatherData(lat = 35.6812, lon = 139.7671, regionName = "東京") {
-            document.getElementById('current-region').innerText = `（${regionName}）`;
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo&forecast_days=14`;
-
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-
-                const grid = document.querySelector('.weather-grid');
-                grid.innerHTML = ''; 
-
-                const getWeatherEmoji = (code) => {
-                    if (code === 0 || code === 1) return '☀️'; 
-                    if (code === 2 || code === 3) return '☁️'; 
-                    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return '☔'; 
-                    if ((code >= 71 && code <= 77) || code >= 85) return '⛄'; 
-                    if (code >= 95) return '⚡'; 
-                    return '❓';
-                };
-
-                const formatDate = (dateString, index) => {
-                    if (index === 0) return '今日';
-                    if (index === 1) return '明日';
-                    const d = new Date(dateString);
-                    return `${d.getMonth() + 1}/${d.getDate()}`;
-                };
-
-                for (let i = 0; i < data.daily.time.length; i++) {
-                    const dateStr = data.daily.time[i];
-                    const maxTemp = Math.round(data.daily.temperature_2m_max[i]); 
-                    const minTemp = Math.round(data.daily.temperature_2m_min[i]);
-                    const weatherCode = data.daily.weathercode[i];
-
-                    const itemHtml = `
-                        <div class="weather-item">
-                            <div class="weather-date">${formatDate(dateStr, i)}</div>
-                            <div class="weather-icon">${getWeatherEmoji(weatherCode)}</div>
-                            <div class="temp-max">${maxTemp}°</div>
-                            <div class="temp-min">${minTemp}°</div>
-                        </div>
-                    `;
-                    grid.insertAdjacentHTML('beforeend', itemHtml);
-                }
-            } catch (error) {
-                console.error('天気データの取得に失敗しました:', error);
-                document.querySelector('.weather-grid').innerHTML = '<p style="padding: 10px;">データの取得に失敗しました。</p>';
-            }
-        }
-
-        // --- 地震情報API関連 ---
-        async function fetchEarthquakeData() {
-            const url = 'https://api.p2pquake.net/v2/history?codes=551&limit=1';
-
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-
-                if (data && data.length > 0) {
-                    const eqInfo = data[0].earthquake;
-                    const timeStr = eqInfo.time; 
-                    const epicenter = eqInfo.hypocenter.name; 
-                    const magnitude = eqInfo.hypocenter.magnitude; 
-                    const maxScaleCode = eqInfo.maxScale; 
-                    const domesticTsunami = data[0].issue.tsunami;
-
-                    const getShindoText = (scaleCode) => {
-                        const scaleMap = {
-                            10: '1', 20: '2', 30: '3', 40: '4',
-                            45: '5弱', 50: '5強', 55: '6弱', 60: '6強', 70: '7'
-                        };
-                        return scaleMap[scaleCode] || '不明';
-                    };
-                    const shindoText = getShindoText(maxScaleCode);
-
-                    const d = new Date(timeStr);
-                    const formattedTime = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}頃`;
-
-                    let tsunamiText = "津波情報の調査中";
-                    let tsunamiColor = "var(--text-color)";
-                    if (domesticTsunami === "None") {
-                        tsunamiText = "津波の心配はありません。";
-                        tsunamiColor = "var(--success-color)";
-                    } else if (domesticTsunami === "Warning" || domesticTsunami === "MajorWarning") {
-                        tsunamiText = "⚠️ 津波警報・注意報が発表されています！";
-                        tsunamiColor = "var(--danger-color)";
-                    }
-
-                    document.getElementById('display-shindo').innerText = shindoText;
-                    document.getElementById('eq-time').innerText = formattedTime;
-                    document.getElementById('eq-epicenter').innerText = epicenter || "調査中";
-                    document.getElementById('eq-magnitude').innerText = magnitude !== -1 ? `M${magnitude}` : "調査中";
-                    
-                    const tsunamiElement = document.getElementById('eq-tsunami');
-                    tsunamiElement.innerText = tsunamiText;
-                    tsunamiElement.style.color = tsunamiColor;
-
-                    if (maxScaleCode >= 45) {
-                        console.log("震度5弱以上を検知しました。緊急モードを起動します。");
-                    }
-                } else {
-                    document.getElementById('display-shindo').innerText = "-";
-                    document.getElementById('eq-time').innerText = "現在地震は発生していません";
-                    document.getElementById('eq-epicenter').innerText = "-";
-                    document.getElementById('eq-magnitude').innerText = "-";
-                    
-                    const tsunamiElement = document.getElementById('eq-tsunami');
-                    tsunamiElement.innerText = "津波の心配はありません。";
-                    tsunamiElement.style.color = "var(--text-light)";
-                }
-            } catch (error) {
-                console.error('地震情報の取得に失敗しました:', error);
-                document.getElementById('display-shindo').innerText = "-";
-                document.getElementById('eq-time').innerText = "情報取得エラー";
-                document.getElementById('eq-epicenter').innerText = "-";
-                document.getElementById('eq-magnitude').innerText = "-";
-            }
-        }
-
-        // --- ページ読み込み時の初期化処理 ---
-        document.addEventListener('DOMContentLoaded', () => {
-            fetchWeatherData();
-            fetchEarthquakeData();
+        // 47都道府県のデータ（緯度・経度）
+        // ※ここは先ほどの const prefectures = [ ... ]; の配列をそのまま残してください。
+        
+        // セレクトボックスの初期化
+        const select = document.getElementById('regionSelect');
+        prefectures.forEach((pref, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = pref.name;
+            if(pref.name === "東京都") option.selected = true; // 初期値
+            select.appendChild(option);
         });
-    </script>
+
+        // WMO天気コードの変換
+        function getWeatherDescription(code) {
+            if (code <= 3) return "☀️ 晴れ・曇り";
+            if (code <= 48) return "🌫️ 霧";
+            if (code <= 67) return "☔ 雨";
+            if (code <= 77) return "⛄ 雪";
+            return "⛈️ 荒天";
+        }
+
+        // メイン処理
+        async function fetchDisasterInfo() {
+            const selectedIndex = select.value;
+            const region = prefectures[selectedIndex];
+
+            // 画面の地域名を更新
+            document.querySelectorAll('.region-label').forEach(label => label.textContent = region.name);
+
+            // 各要素をローディング状態に
+            document.getElementById('weather-text').innerHTML = '<span class="loading">取得中...</span>';
+            document.getElementById('typhoon-text').innerHTML = '<span class="loading">取得中...</span>';
+            document.getElementById('delay-text').innerHTML = '<span class="loading">取得中...</span>';
+            document.getElementById('earthquake-alert').style.display = 'none';
+
+            // 1. 天気 API (Open-Meteo)
+            try {
+                const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${region.lat}&longitude=${region.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo`);
+                if (!weatherRes.ok) throw new Error('Weather API Error');
+                const weatherData = await weatherRes.json();
+                const todayCode = weatherData.daily.weathercode[0];
+                const maxTemp = weatherData.daily.temperature_2m_max[0];
+                const minTemp = weatherData.daily.temperature_2m_min[0];
+                
+                document.getElementById('weather-text').innerHTML = `
+                    <p><strong>今日の天気:</strong> ${getWeatherDescription(todayCode)}</p>
+                    <p><strong>最高気温:</strong> ${maxTemp}℃ / <strong>最低気温:</strong> ${minTemp}℃</p>
+                `;
+            } catch (error) {
+                console.error(error);
+                document.getElementById('weather-text').textContent = "天気の取得に失敗しました。";
+            }
+
+            // 2. 台風 API (気象庁非公式 JSON)
+            try {
+                const typhoonRes = await fetch('https://www.jma.go.jp/bosai/typhoon/data/TC.json');
+                
+                // バグ修正: 台風がない時は404エラーになる仕様に対応
+                if (typhoonRes.status === 404) {
+                    document.getElementById('typhoon-text').textContent = "現在、発生している台風はありません。";
+                } else if (!typhoonRes.ok) {
+                    throw new Error('Typhoon API Error');
+                } else {
+                    const typhoonData = await typhoonRes.json();
+                    if (!typhoonData || typhoonData.length === 0) {
+                        document.getElementById('typhoon-text').textContent = "現在、発生している台風はありません。";
+                    } else {
+                        document.getElementById('typhoon-text').innerHTML = `<strong style="color:#d35400;">現在、${typhoonData.length}個の台風が発生しています。気象庁の情報を確認してください。</strong>`;
+                    }
+                }
+            } catch (error) {
+                console.error(error);
+                document.getElementById('typhoon-text').textContent = "台風情報の取得に失敗しました。";
+            }
+
+            // 3. 遅延 API (鉄道遅延情報API)
+            try {
+                const delayRes = await fetch('https://tetsudo.rti-giken.jp/free/delay.json');
+                if (!delayRes.ok) throw new Error('Delay API Error');
+                const delayData = await delayRes.json();
+                
+                if (!delayData || delayData.length === 0) {
+                    document.getElementById('delay-text').textContent = "現在、遅延している路線はありません。";
+                } else {
+                    let listHtml = '<ul class="delay-list">';
+                    delayData.forEach(line => {
+                        listHtml += `<li>${line.company} - ${line.name}</li>`;
+                    });
+                    listHtml += '</ul>';
+                    document.getElementById('delay-text').innerHTML = listHtml;
+                }
+            } catch (error) {
+                console.error(error);
+                document.getElementById('delay-text').textContent = "遅延情報の取得に失敗しました。";
+            }
+
+            // 4. 地震 API (P2P地震情報)
+            try {
+                const quakeRes = await fetch('https://api.p2pquake.net/v2/history?codes=551&limit=10');
+                if (!quakeRes.ok) throw new Error('Earthquake API Error');
+                const quakeData = await quakeRes.json();
+                
+                // バグ修正: 「東京都」などの末尾を削り、「東京」で検索させる（北海道は除外）
+                let searchName = region.name;
+                if (searchName !== "北海道" && searchName.length > 2) {
+                    searchName = searchName.slice(0, -1); // 末尾1文字を削除
+                }
+
+                // バグ修正: オプショナルチェーン(?.)でNullによるクラッシュを防ぐ
+                const recentMatch = quakeData.find(q => 
+                    q.earthquake?.hypocenter?.name?.includes(searchName)
+                );
+
+                if (recentMatch) {
+                    const time = recentMatch.earthquake.time;
+                    document.getElementById('earthquake-alert').style.display = 'block';
+                    document.getElementById('earthquake-text').innerHTML = `
+                        <p><strong>発生時刻:</strong> ${time}</p>
+                        <p><strong>震源地:</strong> ${recentMatch.earthquake.hypocenter.name}</p>
+                        <p>※直近で該当地域に関連する地震データを受信しました。</p>
+                    `;
+                }
+            } catch (error) {
+                console.error(error);
+                // 地震情報は発生時のみ表示なので、取得失敗時は特に画面へエラーを出さない（非表示のまま）
+            }
+        }
+
+        // 初期表示
+        window.onload = function() {
+            fetchDisasterInfo();
+        };
 </body>
 </html>
