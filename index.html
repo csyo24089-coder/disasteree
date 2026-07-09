@@ -337,7 +337,8 @@
 
             // 2. 台風 API
             try {
-                const typhoonRes = await fetch('https://www.jma.go.jp/bosai/typhoon/data/TC.json');
+                const timestamp = new Date().getTime();
+const typhoonRes = await fetch(`https://www.jma.go.jp/bosai/typhoon/data/TC.json?_=${timestamp}`);
                 if (typhoonRes.status === 404) {
                     document.getElementById('typhoon-text').innerHTML = "<p style='font-size:17px; margin:0;'>現在、発生している台風はありません。</p>";
                 } else if (!typhoonRes.ok) {
