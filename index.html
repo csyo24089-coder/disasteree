@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>全国防災・運行情報アプリ</title>
+    <title>全国防災・運行情報アプリ (テストボタン付)</title>
     <style>
         /* ベーススタイル */
         body {
@@ -29,6 +29,7 @@
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
+            align-items: center; /* 垂直方向の中央揃え */
         }
         .search-box select {
             flex-grow: 1;
@@ -40,7 +41,6 @@
         }
         .search-box button {
             padding: 12px 24px;
-            background-color: #3498db;
             color: white;
             border: none;
             border-radius: 4px;
@@ -48,9 +48,22 @@
             font-size: 16px;
         }
         .search-box button:hover {
-            background-color: #2980b9;
+            opacity: 0.8;
         }
         
+        /* 取得ボタンのスタイル */
+        #getDisasterButton {
+            background-color: #3498db;
+        }
+
+        /* テストボタンのスタイル（赤） */
+        #testQuakeButton {
+            background-color: #d35400; /* オレンジレッド */
+            font-size: 0.9em;
+            padding: 10px 15px;
+            margin-left: 10px;
+        }
+
         /* 各情報カードのスタイル */
         .card {
             background: white;
@@ -72,7 +85,7 @@
 
         /* 地震速報（緊急）のスタイル */
         #earthquake-alert {
-            display: none;
+            display: none; /* 初期状態は非表示 */
             background-color: #e74c3c;
             color: white;
             border: 2px solid #c0392b;
@@ -101,11 +114,12 @@
     <div class="container">
         <div class="search-box">
             <select id="regionSelect"></select>
-            <button onclick="fetchDisasterInfo()">情報を取得</button>
+            <button onclick="fetchDisasterInfo(false)" id="getDisasterButton">情報を取得</button>
+            <button onclick="fetchDisasterInfo(true)" id="testQuakeButton">🚨【テスト】緊急地震ボタン</button>
         </div>
 
         <div id="earthquake-alert" class="card">
-            <h2>⚠️ 関連する地震情報</h2>
+            <h2>⚠️ 緊急地震速報</h2>
             <div id="earthquake-text"></div>
         </div>
 
@@ -151,8 +165,9 @@
             return "⛈️ 荒天";
         }
 
-        // メイン処理（API呼び出し）
-        async function fetchDisasterInfo() {
+        // メイン処理（API呼び出し、テスト発報を含む）
+        // 引数isTestがtrueの場合、強制的に緊急地震速報を表示する
+        async function fetchDisasterInfo(isTest = false) {
             const selectedIndex = select.value;
             const region = prefectures[selectedIndex];
 
@@ -163,9 +178,9 @@
             document.getElementById('weather-text').innerHTML = '<span class="loading">取得中...</span>';
             document.getElementById('typhoon-text').innerHTML = '<span class="loading">取得中...</span>';
             document.getElementById('delay-text').innerHTML = '<span class="loading">取得中...</span>';
-            document.getElementById('earthquake-alert').style.display = 'none';
+            document.getElementById('earthquake-alert').style.display = 'none'; // 地震アラートを一旦隠す
 
-            // 1. 天気 API (Open-Meteo)
+            // 1. 天気 API (Open-Meteo) ... (前と同じ)
             try {
                 const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${region.lat}&longitude=${region.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo`);
                 if (!weatherRes.ok) throw new Error('Weather API Error');
@@ -183,7 +198,7 @@
                 document.getElementById('weather-text').textContent = "天気の取得に失敗しました。";
             }
 
-            // 2. 台風 API (気象庁 JSON)
+            // 2. 台風 API (気象庁 JSON) ... (前と同じ)
             try {
                 const typhoonRes = await fetch('https://www.jma.go.jp/bosai/typhoon/data/TC.json');
                 
@@ -204,7 +219,7 @@
                 document.getElementById('typhoon-text').textContent = "台風情報の取得に失敗しました。";
             }
 
-            // 3. 遅延 API (鉄道遅延情報API)
+            // 3. 遅延 API (鉄道遅延情報API) ... (前と同じ)
             try {
                 const delayRes = await fetch('https://tetsudo.rti-giken.jp/free/delay.json');
                 if (!delayRes.ok) throw new Error('Delay API Error');
@@ -225,8 +240,30 @@
                 document.getElementById('delay-text').textContent = "遅延情報の取得に失敗しました。";
             }
 
-            // 4. 地震 API (P2P地震情報)
+            // 4. 地震 API (P2P地震情報) & テスト表示判定
             try {
+                // 「テスト発報」の場合、強制的にダミーデータを表示して終了
+                if (isTest) {
+                    // 「東京都」の末尾を削り「東京」にする（テスト表示用、北海道はそのまま）
+                    let searchName = region.name;
+                    if (searchName !== "北海道" && searchName.length > 2) {
+                        searchName = searchName.slice(0, -1);
+                    }
+                    // 日時を取得
+                    const now = new Date();
+                    const timeStr = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+
+                    document.getElementById('earthquake-alert').style.display = 'block'; // 強制表示
+                    document.getElementById('earthquake-text').innerHTML = `
+                        <p style="font-size: 1.2em; font-weight: bold; color: #ecf0f1;">【テスト発報】</p>
+                        <p><strong>発生時刻:</strong> ${timeStr}</p>
+                        <p><strong>震源地:</strong> ${searchName}沖 (M5.5)</p>
+                        <p>※これはテスト用のアラートです。実際のデータではありません。</p>
+                    `;
+                    return; // 実際のAPI取得は行わない
+                }
+
+                // ここからは実際のAPI取得
                 const quakeRes = await fetch('https://api.p2pquake.net/v2/history?codes=551&limit=10');
                 if (!quakeRes.ok) throw new Error('Earthquake API Error');
                 const quakeData = await quakeRes.json();
@@ -253,10 +290,11 @@
                 }
             } catch (error) {
                 console.error(error);
+                // 実際の取得失敗時は、地震速報カードを非表示のままにするため、何も表示しない
             }
         }
 
-        // ページ読み込み時に自動で実行
+        // ページ読み込み時に自動で実行 (テストモードではないので引数は無し)
         window.onload = function() {
             fetchDisasterInfo();
         };
