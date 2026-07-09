@@ -7,16 +7,14 @@
     <style>
         /* ＝＝＝ iOS風 ベーススタイル ＝＝＝ */
         body {
-            /* iPhone(Apple)のシステムフォントを最優先に指定 */
             font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #F2F2F7; /* iOS標準の背景グレー */
-            color: #1C1C1E; /* 真っ黒ではなく、視認性の高いダークグレー */
+            background-color: #F2F2F7;
+            color: #1C1C1E;
             -webkit-font-smoothing: antialiased;
         }
         
-        /* ＝＝＝ ヘッダー（Large Title風） ＝＝＝ */
         header {
             max-width: 800px;
             margin: 0 auto;
@@ -48,15 +46,15 @@
             border: none;
             border-radius: 10px;
             font-size: 17px;
-            background-color: #E5E5EA; /* iOSの検索バー背景色 */
+            background-color: #E5E5EA;
             color: #1C1C1E;
             outline: none;
-            appearance: none; /* デフォルトの矢印を消してシンプルに */
+            appearance: none;
             -webkit-appearance: none;
         }
         .search-box button {
             padding: 12px 20px;
-            background-color: #007AFF; /* iOSブルー */
+            background-color: #007AFF;
             color: white;
             border: none;
             border-radius: 10px;
@@ -65,23 +63,21 @@
             font-weight: 600;
             transition: opacity 0.2s;
         }
-        .search-box button:active {
-            opacity: 0.6;
-        }
+        .search-box button:active { opacity: 0.6; }
 
-        /* ＝＝＝ 情報カード（モジュール） ＝＝＝ */
+        /* ＝＝＝ 情報カード ＝＝＝ */
         .card {
             background: #FFFFFF;
-            border-radius: 14px; /* iOSらしい少し大きめの角丸 */
+            border-radius: 14px;
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02), 0 4px 8px rgba(0,0,0,0.02); /* 極めて薄い影 */
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02), 0 4px 8px rgba(0,0,0,0.02);
         }
         .card h2 {
             margin-top: 0;
             font-size: 20px;
             font-weight: 600;
-            border-bottom: 0.5px solid #C6C6C8; /* ヘアライン（極細線） */
+            border-bottom: 0.5px solid #C6C6C8;
             padding-bottom: 12px;
             margin-bottom: 16px;
             letter-spacing: -0.3px;
@@ -91,20 +87,20 @@
             line-height: 1.5;
         }
         .loading {
-            color: #8E8E93; /* iOSのプレースホルダー色 */
+            color: #8E8E93;
             font-size: 15px;
         }
 
-        /* ＝＝＝ 週間天気（Apple Weather風） ＝＝＝ */
+        /* ＝＝＝ 週間天気 ＝＝＝ */
         .weekly-weather {
             display: flex;
             gap: 8px;
             margin-top: 15px;
             overflow-x: auto;
             padding-bottom: 10px;
-            -webkit-overflow-scrolling: touch; /* スマホでの滑らかなスクロール */
+            -webkit-overflow-scrolling: touch;
         }
-        .weekly-weather::-webkit-scrollbar { display: none; } /* スクロールバーを隠す */
+        .weekly-weather::-webkit-scrollbar { display: none; }
         .weekly-weather { -ms-overflow-style: none; scrollbar-width: none; }
 
         .day-card {
@@ -122,18 +118,21 @@
         /* ＝＝＝ 地震速報（緊急） ＝＝＝ */
         #earthquake-alert {
             display: none;
-            background-color: #FF3B30; /* iOSシステムレッド */
+            background-color: #FF3B30;
             color: #FFFFFF;
             animation: pulse 2s infinite;
         }
-        #earthquake-alert h2 { 
-            border-bottom: 0.5px solid rgba(255,255,255,0.4); 
-            color: #FFFFFF; 
-        }
+        #earthquake-alert h2 { border-bottom: 0.5px solid rgba(255,255,255,0.4); color: #FFFFFF; }
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.02); }
             100% { transform: scale(1); }
+        }
+        .quake-detail {
+            background-color: rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
         }
 
         /* ＝＝＝ リンクボタン ＝＝＝ */
@@ -143,7 +142,7 @@
             margin-bottom: 10px;
             padding: 12px 16px;
             background-color: #F2F2F7;
-            color: #007AFF; /* 文字を青にしてiOS標準ボタン風に */
+            color: #007AFF;
             text-decoration: none;
             border-radius: 10px;
             font-size: 15px;
@@ -151,11 +150,8 @@
         }
         .hazard-btn:active { background-color: #E5E5EA; }
 
-        /* ＝＝＝ チェックリスト（設定アプリ風） ＝＝＝ */
-        .checklist {
-            display: flex;
-            flex-direction: column;
-        }
+        /* ＝＝＝ チェックリスト ＝＝＝ */
+        .checklist { display: flex; flex-direction: column; }
         .checklist label {
             display: flex;
             align-items: center;
@@ -166,15 +162,9 @@
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
         }
-        .checklist label:last-child {
-            border-bottom: none; /* 最後は線を消す */
-        }
-        /* チェックボックスを少し大きく */
+        .checklist label:last-child { border-bottom: none; }
         .checklist input[type="checkbox"] { 
-            width: 22px; 
-            height: 22px; 
-            accent-color: #34C759; /* iOSグリーンのチェック */
-            margin: 0;
+            width: 22px; height: 22px; accent-color: #34C759; margin: 0;
         }
     </style>
 </head>
@@ -240,6 +230,7 @@
             select.appendChild(option);
         });
 
+        // 天気コード変換
         function getWeatherDescription(code) {
             if (code <= 3) return "晴れ・曇り";
             if (code <= 48) return "霧";
@@ -256,6 +247,16 @@
             return "⛈️";
         }
 
+        // 震度コードの変換（P2P Quake APIの仕様に準拠）
+        function getSeismicIntensityString(scale) {
+            const scaleMap = {
+                10: "1", 20: "2", 30: "3", 40: "4", 45: "5弱",
+                50: "5強", 55: "6弱", 60: "6強", 70: "7"
+            };
+            return scaleMap[scale] || "不明";
+        }
+
+        // チェックリスト処理
         const checkItems = ['item1', 'item2', 'item3', 'item4', 'item5', 'item6', 'item7'];
         function loadChecklist() {
             checkItems.forEach(id => {
@@ -279,11 +280,13 @@
             document.getElementById('typhoon-text').innerHTML = '<span class="loading">情報を取得中...</span>';
             document.getElementById('earthquake-alert').style.display = 'none';
 
+            // ハザードマップと【Yahoo!避難場所マップ】へのリンク
             document.getElementById('hazard-links').innerHTML = `
-                <a href="https://disaportal.gsi.go.jp/" target="_blank" class="hazard-btn">ハザードマップを開く</a>
-                <a href="https://www.google.com/search?q=${region.name}+避難所" target="_blank" class="hazard-btn">避難所を検索</a>
+                <a href="https://disaportal.gsi.go.jp/" target="_blank" class="hazard-btn">ハザードマップ (国土地理院)</a>
+                <a href="https://crisis.yahoo.co.jp/map/" target="_blank" class="hazard-btn">避難所マップ (Yahoo!天気・災害)</a>
             `;
 
+            // 1. 天気 API
             try {
                 const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${region.lat}&longitude=${region.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo`);
                 if (!weatherRes.ok) throw new Error('Weather API Error');
@@ -324,6 +327,7 @@
                 document.getElementById('weather-text').textContent = "天気の取得に失敗しました。";
             }
 
+            // 2. 台風 API (Yahoo!台風情報リンク追加)
             try {
                 const typhoonRes = await fetch('https://www.jma.go.jp/bosai/typhoon/data/TC.json');
                 if (typhoonRes.status === 404) {
@@ -335,13 +339,18 @@
                     if (!typhoonData || typhoonData.length === 0) {
                         document.getElementById('typhoon-text').innerHTML = "<p style='font-size:17px; margin:0;'>現在、発生している台風はありません。</p>";
                     } else {
-                        document.getElementById('typhoon-text').innerHTML = `<p style="font-size:17px; margin:0; color:#FF9500; font-weight:600;">現在、${typhoonData.length}個の台風が発生しています。</p>`;
+                        // 台風が発生している場合のみ、Yahoo!天気の台風進路ページへのボタンを表示
+                        document.getElementById('typhoon-text').innerHTML = `
+                            <p style="font-size:17px; margin-bottom:15px; color:#FF3B30; font-weight:600;">現在、${typhoonData.length}個の台風が発生しています。</p>
+                            <a href="https://typhoon.yahoo.co.jp/weather/jp/typhoon/" target="_blank" class="hazard-btn" style="margin:0;">進路予想を見る (Yahoo!天気)</a>
+                        `;
                     }
                 }
             } catch (error) {
                 document.getElementById('typhoon-text').textContent = "台風情報の取得に失敗しました。";
             }
 
+            // 3. 地震 API (マグニチュードと最大震度の追加)
             try {
                 const quakeRes = await fetch('https://api.p2pquake.net/v2/history?codes=551&limit=10');
                 if (!quakeRes.ok) throw new Error('Earthquake API Error');
@@ -358,10 +367,22 @@
 
                 if (recentMatch) {
                     const time = recentMatch.earthquake.time;
+                    const hypocenterName = recentMatch.earthquake.hypocenter.name;
+                    
+                    // マグニチュード (-1.0の場合は不明とする)
+                    const magValue = recentMatch.earthquake.hypocenter.magnitude;
+                    const magnitude = magValue !== -1.0 ? `M${magValue}` : "不明";
+                    
+                    // 震度変換
+                    const scaleStr = getSeismicIntensityString(recentMatch.earthquake.maxScale);
+
                     document.getElementById('earthquake-alert').style.display = 'block';
                     document.getElementById('earthquake-text').innerHTML = `
-                        <p style="font-weight:600; margin-top:0;">震源地: ${recentMatch.earthquake.hypocenter.name}</p>
-                        <p style="margin-bottom:0; font-size: 15px;">発生時刻: ${time}</p>
+                        <p style="font-weight:600; font-size: 18px; margin-top:0;">震源地: ${hypocenterName} (${magnitude})</p>
+                        <div class="quake-detail">
+                            <p style="margin:0 0 5px 0; font-size: 16px; font-weight: 600;">最大震度: ${scaleStr}</p>
+                            <p style="margin:0; font-size: 14px; opacity: 0.9;">発生時刻: ${time}</p>
+                        </div>
                     `;
                 }
             } catch (error) {
