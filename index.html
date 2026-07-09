@@ -29,7 +29,7 @@
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
-            align-items: center; /* 垂直方向の中央揃え */
+            align-items: center;
         }
         .search-box select {
             flex-grow: 1;
@@ -50,15 +50,11 @@
         .search-box button:hover {
             opacity: 0.8;
         }
-        
-        /* 取得ボタンのスタイル */
         #getDisasterButton {
             background-color: #3498db;
         }
-
-        /* テストボタンのスタイル（赤） */
         #testQuakeButton {
-            background-color: #d35400; /* オレンジレッド */
+            background-color: #d35400;
             font-size: 0.9em;
             padding: 10px 15px;
             margin-left: 10px;
@@ -83,9 +79,46 @@
             font-size: 0.9em;
         }
 
+        /* ＝＝＝ 遅延情報アコーディオン（開閉）用スタイル ＝＝＝ */
+        #delay-info {
+            cursor: pointer; /* クリックできることを示す指マーク */
+            transition: background-color 0.2s;
+        }
+        #delay-info:hover {
+            background-color: #f8fcfd; /* マウスを乗せると少し色が変わる */
+        }
+        .delay-header {
+            display: flex;
+            justify-content: space-between; /* 文字とアイコンを左右に分ける */
+            align-items: center;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        .delay-header h2 {
+            border-bottom: none; /* デフォルトの線を消す */
+            padding-bottom: 0;
+            margin-bottom: 0;
+        }
+        .toggle-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s; /* 回転アニメーション */
+        }
+        #delay-content {
+            display: none; /* 初期状態は非表示（折りたたみ） */
+        }
+        /* 展開（expanded）クラスがついた時の状態 */
+        #delay-info.expanded .toggle-icon {
+            transform: rotate(180deg); /* アイコンを逆さにする */
+        }
+        #delay-info.expanded #delay-content {
+            display: block; /* 中身を表示する */
+        }
+        /* ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝ */
+
         /* 地震速報（緊急）のスタイル */
         #earthquake-alert {
-            display: none; /* 初期状態は非表示 */
+            display: none;
             background-color: #e74c3c;
             color: white;
             border: 2px solid #c0392b;
@@ -133,15 +166,20 @@
             <div id="typhoon-text" class="loading">待機中...</div>
         </div>
 
-        <div class="card" id="delay-info">
-            <h2>🚃 鉄道遅延情報 (全国)</h2>
-            <p style="font-size: 0.8em; color: #666;">※路線ごとの都道府県判定が難しいため、現在遅延している全国の路線を表示します。</p>
-            <div id="delay-text" class="loading">待機中...</div>
+        <div class="card" id="delay-info" onclick="toggleDelayInfo()">
+            <div class="delay-header">
+                <h2>🚃 鉄道遅延情報 (全国)</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div id="delay-content">
+                <p style="font-size: 0.8em; color: #666;">※路線ごとの都道府県判定が難しいため、現在遅延している全国の路線を表示します。</p>
+                <div id="delay-text" class="loading">待機中...</div>
+            </div>
         </div>
     </div>
 
     <script>
-        // 47都道府県のデータ（緯度・経度）
+        // 47都道府県のデータ
         const prefectures = [
             { name: "北海道", lat: 43.06417, lon: 141.34694 }, { name: "青森県", lat: 40.82444, lon: 140.74 }, { name: "岩手県", lat: 39.70361, lon: 141.1525 }, { name: "宮城県", lat: 38.26889, lon: 140.87194 }, { name: "秋田県", lat: 39.71861, lon: 140.1025 }, { name: "山形県", lat: 38.24056, lon: 140.36333 }, { name: "福島県", lat: 37.75, lon: 140.46778 }, { name: "茨城県", lat: 36.34139, lon: 140.44667 }, { name: "栃木県", lat: 36.56583, lon: 139.88361 }, { name: "群馬県", lat: 36.39111, lon: 139.06083 }, { name: "埼玉県", lat: 35.85694, lon: 139.64889 }, { name: "千葉県", lat: 35.60472, lon: 140.12333 }, { name: "東京都", lat: 35.68944, lon: 139.69167 }, { name: "神奈川県", lat: 35.44778, lon: 139.6425 }, { name: "新潟県", lat: 37.90222, lon: 139.02361 }, { name: "富山県", lat: 36.69528, lon: 137.21139 }, { name: "石川県", lat: 36.59444, lon: 136.62556 }, { name: "福井県", lat: 36.06528, lon: 136.22194 }, { name: "山梨県", lat: 35.66389, lon: 138.56833 }, { name: "長野県", lat: 36.65139, lon: 138.18111 }, { name: "岐阜県", lat: 35.39111, lon: 136.72222 }, { name: "静岡県", lat: 34.97694, lon: 138.38306 }, { name: "愛知県", lat: 35.18028, lon: 136.90667 }, { name: "三重県", lat: 34.73028, lon: 136.50861 }, { name: "滋賀県", lat: 35.00444, lon: 135.86833 }, { name: "京都府", lat: 35.02139, lon: 135.75556 }, { name: "大阪府", lat: 34.68639, lon: 135.52 }, { name: "兵庫県", lat: 34.69139, lon: 135.18306 }, { name: "奈良県", lat: 34.68528, lon: 135.83278 }, { name: "和歌山県", lat: 34.22611, lon: 135.1675 }, { name: "鳥取県", lat: 35.50361, lon: 134.23833 }, { name: "島根県", lat: 35.47222, lon: 133.05056 }, { name: "岡山県", lat: 34.66167, lon: 133.935 }, { name: "広島県", lat: 34.39639, lon: 132.45944 }, { name: "山口県", lat: 34.18583, lon: 131.47139 }, { name: "徳島県", lat: 34.06583, lon: 134.55944 }, { name: "香川県", lat: 34.34028, lon: 134.04333 }, { name: "愛媛県", lat: 33.84167, lon: 132.76611 }, { name: "高知県", lat: 33.55972, lon: 133.53111 }, { name: "福岡県", lat: 33.60639, lon: 130.41806 }, { name: "佐賀県", lat: 33.26333, lon: 130.30083 }, { name: "長崎県", lat: 32.74472, lon: 129.87361 }, { name: "熊本県", lat: 32.78972, lon: 130.74167 }, { name: "大分県", lat: 33.23806, lon: 131.6125 }, { name: "宮崎県", lat: 31.91111, lon: 131.42389 }, { name: "鹿児島県", lat: 31.56028, lon: 130.55806 }, { name: "沖縄県", lat: 26.2125, lon: 127.68111 }
         ];
@@ -152,11 +190,11 @@
             const option = document.createElement('option');
             option.value = index;
             option.textContent = pref.name;
-            if(pref.name === "東京都") option.selected = true; // 初期選択を東京都に
+            if(pref.name === "東京都") option.selected = true;
             select.appendChild(option);
         });
 
-        // WMO天気コードの変換
+        // 天気コード変換
         function getWeatherDescription(code) {
             if (code <= 3) return "☀️ 晴れ・曇り";
             if (code <= 48) return "🌫️ 霧";
@@ -165,22 +203,25 @@
             return "⛈️ 荒天";
         }
 
-        // メイン処理（API呼び出し、テスト発報を含む）
-        // 引数isTestがtrueの場合、強制的に緊急地震速報を表示する
+        // ▼ 追加：遅延情報カードを開閉する関数
+        function toggleDelayInfo() {
+            const delayCard = document.getElementById('delay-info');
+            delayCard.classList.toggle('expanded'); // expandedクラスを付け外しする
+        }
+
+        // メイン処理
         async function fetchDisasterInfo(isTest = false) {
             const selectedIndex = select.value;
             const region = prefectures[selectedIndex];
 
-            // 画面の地域名を更新
             document.querySelectorAll('.region-label').forEach(label => label.textContent = region.name);
 
-            // 各要素をローディング状態に
             document.getElementById('weather-text').innerHTML = '<span class="loading">取得中...</span>';
             document.getElementById('typhoon-text').innerHTML = '<span class="loading">取得中...</span>';
             document.getElementById('delay-text').innerHTML = '<span class="loading">取得中...</span>';
-            document.getElementById('earthquake-alert').style.display = 'none'; // 地震アラートを一旦隠す
+            document.getElementById('earthquake-alert').style.display = 'none';
 
-            // 1. 天気 API (Open-Meteo) ... (前と同じ)
+            // 1. 天気 API
             try {
                 const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${region.lat}&longitude=${region.lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo`);
                 if (!weatherRes.ok) throw new Error('Weather API Error');
@@ -194,14 +235,12 @@
                     <p><strong>最高気温:</strong> ${maxTemp}℃ / <strong>最低気温:</strong> ${minTemp}℃</p>
                 `;
             } catch (error) {
-                console.error(error);
                 document.getElementById('weather-text').textContent = "天気の取得に失敗しました。";
             }
 
-            // 2. 台風 API (気象庁 JSON) ... (前と同じ)
+            // 2. 台風 API
             try {
                 const typhoonRes = await fetch('https://www.jma.go.jp/bosai/typhoon/data/TC.json');
-                
                 if (typhoonRes.status === 404) {
                     document.getElementById('typhoon-text').textContent = "現在、発生している台風はありません。";
                 } else if (!typhoonRes.ok) {
@@ -215,11 +254,10 @@
                     }
                 }
             } catch (error) {
-                console.error(error);
                 document.getElementById('typhoon-text').textContent = "台風情報の取得に失敗しました。";
             }
 
-            // 3. 遅延 API (鉄道遅延情報API) ... (前と同じ)
+            // 3. 遅延 API （修正：エラー時はテストデータを表示）
             try {
                 const delayRes = await fetch('https://tetsudo.rti-giken.jp/free/delay.json');
                 if (!delayRes.ok) throw new Error('Delay API Error');
@@ -236,45 +274,47 @@
                     document.getElementById('delay-text').innerHTML = listHtml;
                 }
             } catch (error) {
-                console.error(error);
-                document.getElementById('delay-text').textContent = "遅延情報の取得に失敗しました。";
+                console.error("遅延APIエラー:", error);
+                // サーバーがダウンしている場合は、ダミーデータを表示して開閉の動きをテストできるようにする
+                document.getElementById('delay-text').innerHTML = `
+                    <p style="color:#e74c3c; font-size:0.9em; margin-top:0;">※現在、遅延情報サーバーに接続できません。以下は動作確認用のダミーデータです。</p>
+                    <ul class="delay-list">
+                        <li>JR東日本 - 山手線 (テスト)</li>
+                        <li>東京メトロ - 日比谷線 (テスト)</li>
+                        <li>小田急電鉄 - 小田原線 (テスト)</li>
+                    </ul>
+                `;
             }
 
-            // 4. 地震 API (P2P地震情報) & テスト表示判定
+            // 4. 地震 API & テスト発報
             try {
-                // 「テスト発報」の場合、強制的にダミーデータを表示して終了
                 if (isTest) {
-                    // 「東京都」の末尾を削り「東京」にする（テスト表示用、北海道はそのまま）
                     let searchName = region.name;
                     if (searchName !== "北海道" && searchName.length > 2) {
                         searchName = searchName.slice(0, -1);
                     }
-                    // 日時を取得
                     const now = new Date();
                     const timeStr = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
 
-                    document.getElementById('earthquake-alert').style.display = 'block'; // 強制表示
+                    document.getElementById('earthquake-alert').style.display = 'block';
                     document.getElementById('earthquake-text').innerHTML = `
                         <p style="font-size: 1.2em; font-weight: bold; color: #ecf0f1;">【テスト発報】</p>
                         <p><strong>発生時刻:</strong> ${timeStr}</p>
                         <p><strong>震源地:</strong> ${searchName}沖 (M5.5)</p>
                         <p>※これはテスト用のアラートです。実際のデータではありません。</p>
                     `;
-                    return; // 実際のAPI取得は行わない
+                    return;
                 }
 
-                // ここからは実際のAPI取得
                 const quakeRes = await fetch('https://api.p2pquake.net/v2/history?codes=551&limit=10');
                 if (!quakeRes.ok) throw new Error('Earthquake API Error');
                 const quakeData = await quakeRes.json();
                 
-                // 「東京都」の末尾を削り「東京」にする（地域マッチング用、北海道はそのまま）
                 let searchName = region.name;
                 if (searchName !== "北海道" && searchName.length > 2) {
                     searchName = searchName.slice(0, -1);
                 }
 
-                // 直近の地震履歴から選択した地域を検索
                 const recentMatch = quakeData.find(q => 
                     q.earthquake?.hypocenter?.name?.includes(searchName)
                 );
@@ -290,11 +330,9 @@
                 }
             } catch (error) {
                 console.error(error);
-                // 実際の取得失敗時は、地震速報カードを非表示のままにするため、何も表示しない
             }
         }
 
-        // ページ読み込み時に自動で実行 (テストモードではないので引数は無し)
         window.onload = function() {
             fetchDisasterInfo();
         };
