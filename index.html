@@ -247,7 +247,7 @@
             return "⛈️";
         }
 
-        // 震度コードの変換（P2P Quake APIの仕様に準拠）
+        // 震度コードの変換
         function getSeismicIntensityString(scale) {
             const scaleMap = {
                 10: "1", 20: "2", 30: "3", 40: "4", 45: "5弱",
@@ -274,16 +274,20 @@
         async function fetchDisasterInfo() {
             const selectedIndex = select.value;
             const region = prefectures[selectedIndex];
+            
+            // JIS都道府県コード（01〜47）を計算して2桁の文字列にする（例: 13）
+            const prefCode = String(Number(selectedIndex) + 1).padStart(2, '0');
 
             document.querySelectorAll('.region-label').forEach(label => label.textContent = region.name);
             document.getElementById('weather-text').innerHTML = '<span class="loading">情報を取得中...</span>';
             document.getElementById('typhoon-text').innerHTML = '<span class="loading">情報を取得中...</span>';
             document.getElementById('earthquake-alert').style.display = 'none';
 
-            // ハザードマップと【Yahoo!避難場所マップ】へのリンク
+            // 【連動アップデート】ハザードマップとYahoo!関連のリンク
             document.getElementById('hazard-links').innerHTML = `
                 <a href="https://disaportal.gsi.go.jp/" target="_blank" class="hazard-btn">ハザードマップ (国土地理院)</a>
-                <a href="https://crisis.yahoo.co.jp/map/" target="_blank" class="hazard-btn">避難所マップ (Yahoo!天気・災害)</a>
+                <a href="https://crisis.yahoo.co.jp/evacuation/${prefCode}/" target="_blank" class="hazard-btn">避難所・開設状況 (Yahoo!災害)</a>
+                <a href="https://map.yahoo.co.jp/search?q=${encodeURIComponent(region.name + ' 避難所')}" target="_blank" class="hazard-btn">周辺の避難所マップ (Yahoo!地図)</a>
             `;
 
             // 1. 天気 API
@@ -327,7 +331,7 @@
                 document.getElementById('weather-text').textContent = "天気の取得に失敗しました。";
             }
 
-            // 2. 台風 API (Yahoo!台風情報リンク追加)
+            // 2. 台風 API
             try {
                 const typhoonRes = await fetch('https://www.jma.go.jp/bosai/typhoon/data/TC.json');
                 if (typhoonRes.status === 404) {
@@ -339,7 +343,6 @@
                     if (!typhoonData || typhoonData.length === 0) {
                         document.getElementById('typhoon-text').innerHTML = "<p style='font-size:17px; margin:0;'>現在、発生している台風はありません。</p>";
                     } else {
-                        // 台風が発生している場合のみ、Yahoo!天気の台風進路ページへのボタンを表示
                         document.getElementById('typhoon-text').innerHTML = `
                             <p style="font-size:17px; margin-bottom:15px; color:#FF3B30; font-weight:600;">現在、${typhoonData.length}個の台風が発生しています。</p>
                             <a href="https://typhoon.yahoo.co.jp/weather/jp/typhoon/" target="_blank" class="hazard-btn" style="margin:0;">進路予想を見る (Yahoo!天気)</a>
@@ -350,7 +353,7 @@
                 document.getElementById('typhoon-text').textContent = "台風情報の取得に失敗しました。";
             }
 
-            // 3. 地震 API (マグニチュードと最大震度の追加)
+            // 3. 地震 API
             try {
                 const quakeRes = await fetch('https://api.p2pquake.net/v2/history?codes=551&limit=10');
                 if (!quakeRes.ok) throw new Error('Earthquake API Error');
@@ -369,11 +372,8 @@
                     const time = recentMatch.earthquake.time;
                     const hypocenterName = recentMatch.earthquake.hypocenter.name;
                     
-                    // マグニチュード (-1.0の場合は不明とする)
                     const magValue = recentMatch.earthquake.hypocenter.magnitude;
                     const magnitude = magValue !== -1.0 ? `M${magValue}` : "不明";
-                    
-                    // 震度変換
                     const scaleStr = getSeismicIntensityString(recentMatch.earthquake.maxScale);
 
                     document.getElementById('earthquake-alert').style.display = 'block';
