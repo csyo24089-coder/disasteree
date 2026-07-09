@@ -118,20 +118,22 @@
         /* ＝＝＝ 地震速報（緊急） ＝＝＝ */
         #earthquake-alert {
             display: none;
-            background-color: #FF3B30;
+            /* 背景色や文字色はJavaScriptで震度に応じて上書きされます */
+            background-color: #FF3B30; 
             color: #FFFFFF;
             animation: pulse 2s infinite;
         }
-        #earthquake-alert h2 { border-bottom: 0.5px solid rgba(255,255,255,0.4); color: #FFFFFF; }
+        /* H2のボーダー色も震度に応じて見やすくするため透明度を利用 */
+        #earthquake-alert h2 { border-bottom: 0.5px solid rgba(0,0,0,0.15); }
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.02); }
             100% { transform: scale(1); }
         }
         .quake-detail {
-            background-color: rgba(255,255,255,0.2);
-            padding: 10px;
-            border-radius: 8px;
+            background-color: rgba(255,255,255,0.25);
+            padding: 12px;
+            border-radius: 10px;
             margin-top: 10px;
         }
 
@@ -181,7 +183,7 @@
         </div>
 
         <div id="earthquake-alert" class="card">
-            <h2>⚠️ 地震情報</h2>
+            <h2 id="earthquake-title">⚠️ 地震情報</h2>
             <div id="earthquake-text"></div>
         </div>
 
@@ -238,7 +240,6 @@
             if (code <= 77) return "雪";
             return "荒天";
         }
-
         function getWeatherIcon(code) {
             if (code <= 3) return "☀️";
             if (code <= 48) return "🌫️";
@@ -247,14 +248,19 @@
             return "⛈️";
         }
 
-        // 震度コードの変換
-        function getSeismicIntensityString(scale) {
-            const scaleMap = {
-                10: "1", 20: "2", 30: "3", 40: "4", 45: "5弱",
-                50: "5強", 55: "6弱", 60: "6強", 70: "7"
-            };
-            return scaleMap[scale] || "不明";
-        }
+        // ▼ 【追加】震度情報・配色データの定義
+        // 気象庁やテレビの地震速報等で使われる配色ルールに基づいたカラーマップ
+        const seismicColorMap = {
+            10: { text: "1",   bg: "#A0A0A0", color: "#FFFFFF" }, // 灰色
+            20: { text: "2",   bg: "#1E90FF", color: "#FFFFFF" }, // 青色
+            30: { text: "3",   bg: "#32CD32", color: "#FFFFFF" }, // 緑色
+            40: { text: "4",   bg: "#FAEA00", color: "#1C1C1E" }, // 黄色 (文字は黒)
+            45: { text: "5弱", bg: "#FFB400", color: "#1C1C1E" }, // 山吹色 (文字は黒)
+            50: { text: "5強", bg: "#FF8C00", color: "#FFFFFF" }, // オレンジ色
+            55: { text: "6弱", bg: "#FF2800", color: "#FFFFFF" }, // 赤色
+            60: { text: "6強", bg: "#A50021", color: "#FFFFFF" }, // 濃い赤色
+            70: { text: "7",   bg: "#800080", color: "#FFFFFF" }  // 紫色
+        };
 
         // チェックリスト処理
         const checkItems = ['item1', 'item2', 'item3', 'item4', 'item5', 'item6', 'item7'];
@@ -275,7 +281,6 @@
             const selectedIndex = select.value;
             const region = prefectures[selectedIndex];
             
-            // JIS都道府県コード（01〜47）を計算して2桁の文字列にする（例: 13）
             const prefCode = String(Number(selectedIndex) + 1).padStart(2, '0');
 
             document.querySelectorAll('.region-label').forEach(label => label.textContent = region.name);
@@ -283,7 +288,6 @@
             document.getElementById('typhoon-text').innerHTML = '<span class="loading">情報を取得中...</span>';
             document.getElementById('earthquake-alert').style.display = 'none';
 
-            // 【連動アップデート】ハザードマップとYahoo!関連のリンク
             document.getElementById('hazard-links').innerHTML = `
                 <a href="https://disaportal.gsi.go.jp/" target="_blank" class="hazard-btn">ハザードマップ (国土地理院)</a>
                 <a href="https://crisis.yahoo.co.jp/evacuation/${prefCode}/" target="_blank" class="hazard-btn">避難所・開設状況 (Yahoo!災害)</a>
@@ -374,13 +378,25 @@
                     
                     const magValue = recentMatch.earthquake.hypocenter.magnitude;
                     const magnitude = magValue !== -1.0 ? `M${magValue}` : "不明";
-                    const scaleStr = getSeismicIntensityString(recentMatch.earthquake.maxScale);
+                    
+                    // ▼ 【追加】震度による配色の適用
+                    const scaleRaw = recentMatch.earthquake.maxScale;
+                    // APIデータに該当する震度が存在しない場合はデフォルト(不明・グレー)を設定
+                    const quakeStyle = seismicColorMap[scaleRaw] || { text: "不明", bg: "#7F8C8D", color: "#FFFFFF" };
+                    
+                    const alertBox = document.getElementById('earthquake-alert');
+                    const alertTitle = document.getElementById('earthquake-title');
+                    
+                    // CSSを動的に書き換え
+                    alertBox.style.backgroundColor = quakeStyle.bg;
+                    alertBox.style.color = quakeStyle.color;
+                    alertTitle.style.color = quakeStyle.color;
 
-                    document.getElementById('earthquake-alert').style.display = 'block';
+                    alertBox.style.display = 'block';
                     document.getElementById('earthquake-text').innerHTML = `
                         <p style="font-weight:600; font-size: 18px; margin-top:0;">震源地: ${hypocenterName} (${magnitude})</p>
                         <div class="quake-detail">
-                            <p style="margin:0 0 5px 0; font-size: 16px; font-weight: 600;">最大震度: ${scaleStr}</p>
+                            <p style="margin:0 0 5px 0; font-size: 16px; font-weight: 600;">最大震度: <span style="font-size: 22px;">${quakeStyle.text}</span></p>
                             <p style="margin:0; font-size: 14px; opacity: 0.9;">発生時刻: ${time}</p>
                         </div>
                     `;
